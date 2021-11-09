@@ -55,9 +55,9 @@ const EDB = axios.create({
 });
 
 // export var EDBmovements;
-var EDBmovements;
+var EDBmovementsUnsecure;
 
-export var EDBmovementsSecure = EDBmovements.map((EDBmovement) => {
+export var EDBmovements = EDBmovementsUnsecure.map((EDBmovement) => {
   const { gifUrl: gifUrlUnsecure } = EDBmovement;
   const indexOfp = gifUrlUnsecure.indexOf("p");
   return {
@@ -76,7 +76,7 @@ mongoose
   .then(() => EDB.get(`/exercises`))
   .then(({ data }) => {
     console.log(`EDBmovements.length: `, data.length);
-    EDBmovements = data;
+    EDBmovementsUnsecure = data;
   })
   .catch((error) => console.log(error.message));
 
