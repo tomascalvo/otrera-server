@@ -2,7 +2,8 @@ import jwt, { decode } from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 const auth = async (req, res, next) => {
-  const elideToken = (string) => {
+  const elideToken = (token) => {
+    const string = token;
     if (string.length < 32) {
       return string;
     } else {
@@ -13,7 +14,7 @@ const auth = async (req, res, next) => {
     console.log("auth middleware invoked");
     const authHeader = req.headers.authorization;
     console.log(
-      `authorization header: ${authHeader.slice(
+      `authorization header: ${authHeader.split(
         " ")[0] + " " + elideToken(authHeader.slice(" ")[1])}`
     );
     const token = authHeader.split(" ")[1];
