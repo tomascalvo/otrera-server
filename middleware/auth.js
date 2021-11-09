@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const authHeaderSplit = authHeader.split(" ");
     console.log(
-      `authorization header: ${authHeader.authHeaderSplit[0] + " " + elideToken(authHeaderSplit[1])}`
+      `authorization header: ${authHeaderSplit[0] + " " + elideToken(authHeaderSplit[1])}`
     );
     const token = authHeader.split(" ")[1];
     console.log(`token: ...${elideToken(token)}`);
