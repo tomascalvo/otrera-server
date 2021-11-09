@@ -3,8 +3,12 @@ import User from "../models/user.model.js";
 
 const auth = async (req, res, next) => {
   try {
+    console.log('auth middleware invoked');
+    console.log(`authorization header: ${req.headers.authorization}`);
     const token = req.headers.authorization.split(" ")[1];
+    console.log(`token: ${token}`);
     const isCustomAuth = token.length < 500;
+    console.log(`token is custom auth token: ${isCustomAuth}`);
     let decodedData;
     if (token && isCustomAuth) {
       decodedData = jwt.verify(token, "jwtSecretTest");
