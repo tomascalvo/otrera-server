@@ -8,7 +8,7 @@ const auth = async (req, res, next) => {
     if (string.length < 32) {
       return token;
     } else {
-      return string.splice(4, string.length - 8, "...");
+      return string.slice(0, 4) + "..." + string.slice(-4);
     }
   }
   try {
