@@ -88,7 +88,7 @@ export const signin = async (req, res) => {
 
 export const googleSignin = async (req, res) => {
   console.log(
-    `googleSignin controller invoked for google user ${req.body.profile?.firstName} ${req.body.profile?.lastName}, googleId: ${req.body.profile.googleId}`
+    `googleSignin controller invoked for google user ${req.body.profile?.givenName} ${req.body.profile?.familyName}, googleId: ${req.body.profile.googleId}`
   );
 
   const {
@@ -177,12 +177,13 @@ export const googleSignin = async (req, res) => {
             .json({ user: updatedUser, token: googleToken });
         }
       } else {
+        console.log(`Otrera doesn't have a user account with email address ${email}. Creating a new otrera user account.`);
         const newUser = new User({
           email,
           lastName,
-          givenName,
+          firstName,
           googleId,
-          imageUrl,
+          image,
         });
         await newUser.save();
         res.status(201).json({ user: newUser, token: googleToken });
