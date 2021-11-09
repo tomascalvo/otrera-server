@@ -54,8 +54,7 @@ const EDB = axios.create({
   },
 });
 
-// export var EDBmovements;
-var EDBmovementsUnsecure;
+export var EDBmovements;
 
 mongoose
   .connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -65,20 +64,18 @@ mongoose
     )
   )
   .then(() => EDB.get(`/exercises`))
-  .then(({ data }) => {
-    console.log(`EDBmovements.length: `, data.length);
-    EDBmovementsUnsecure = data;
+  .then(({ data: EDBmovementsUnsecure }) => {
+    console.log(`EDBmovements.length: `, EDBmovementsUnsecure.length);
+    EDBmovementsUnsecure = EDBmovementsUnsecure.map((EDBmovement) => {
+      const { gifUrl: gifUrlUnsecure } = EDBmovement;
+      const indexOfp = gifUrlUnsecure.indexOf("p");
+      return {
+        ...EDBmovement,
+        gifUrl:
+          gifUrlUnsecure.slice(0, indexOfp) + "s" + gifUrlUnsecure.slice(indexOfp),
+      };
+    });
   })
   .catch((error) => console.log(error.message));
 
 mongoose.set("useFindAndModify", false);
-
-export var EDBmovements = EDBmovementsUnsecure.map((EDBmovement) => {
-  const { gifUrl: gifUrlUnsecure } = EDBmovement;
-  const indexOfp = gifUrlUnsecure.indexOf("p");
-  return {
-    ...EDBmovement,
-    gifUrl:
-      gifUrlUnsecure.slice(0, indexOfp) + "s" + gifUrlUnsecure.slice(indexOfp),
-  };
-});
