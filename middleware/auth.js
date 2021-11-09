@@ -3,9 +3,10 @@ import User from "../models/user.model.js";
 
 const auth = async (req, res, next) => {
   const elideToken = (token) => {
+    console.log(`typeof token = ${typeof token}`);
     const string = token;
     if (string.length < 32) {
-      return string;
+      return token;
     } else {
       return string.splice(4, string.length - 8, "...");
     }
@@ -13,9 +14,9 @@ const auth = async (req, res, next) => {
   try {
     console.log("auth middleware invoked");
     const authHeader = req.headers.authorization;
+    const authHeaderSplit = authHeader.split(" ");
     console.log(
-      `authorization header: ${authHeader.split(
-        " ")[0] + " " + elideToken(authHeader.slice(" ")[1])}`
+      `authorization header: ${authHeader.authHeaderSplit[0] + " " + elideToken(authHeaderSplit)[1]}`
     );
     const token = authHeader.split(" ")[1];
     console.log(`token: ...${elideToken(token)}`);
