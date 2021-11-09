@@ -54,8 +54,8 @@ export const signup = async (req, res) => {
 export const signin = async (req, res) => {
   console.log("signin controller reached");
   const { email, password } = req.body;
-  console.log('email: ', email);
-  console.log('password: ', password);
+  console.log("email: ", email);
+  console.log("password: ", password);
   try {
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
@@ -63,16 +63,16 @@ export const signin = async (req, res) => {
         message: "That email is not registered to an Otrera user account.",
       });
     }
-    console.log('user account found');
+    console.log("user account found");
     const isPasswordCorrect = await bcrypt.compare(
       password,
       existingUser.password
     );
-    console.log('isPasswordCorrect: ', isPasswordCorrect);
+    console.log("isPasswordCorrect: ", isPasswordCorrect);
     if (!isPasswordCorrect) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
-    console.log('password is correct');
+    console.log("password is correct");
     const token = jwt.sign(
       { email: existingUser.email, id: existingUser._id },
       "jwtSecretTest",
@@ -87,6 +87,10 @@ export const signin = async (req, res) => {
 };
 
 export const googleSignin = async (req, res) => {
+  console.log(
+    `googleSignin controller invoked for google user ${req.body.profile?.firstName} ${req.body.profile?.lastName}, googleId: ${req.body.profile.googleId}`
+  );
+
   const {
     profile: {
       email,
@@ -101,8 +105,11 @@ export const googleSignin = async (req, res) => {
   try {
     const userByGoogleId = await User.findOne({ googleId: googleId });
     if (userByGoogleId) {
-      console.log('user account found with googleId');
+      console.log(`User account found with googleId: ${googleId}`);
       if (!userByGoogleId?.image && image) {
+        console.log(
+          `This otrera user account has no profile image. Saving google imageUrl to otrera user account.`
+        );
         // add google image to existingUser
         const updatedUser = await User.findByIdAndUpdate(
           userByGoogleId._id,
@@ -114,36 +121,72 @@ export const googleSignin = async (req, res) => {
             new: true,
           }
         );
-        console.log('updated user declared');
+        console.log(
+          `User ${updatedUser._id} has been updated with an image from google account ${googleId}.`
+        );
         return res.status(201).json({ user: updatedUser, token: googleToken });
       } else {
-        return res.status(200).json({ user: userByGoogleId, token: googleToken });
+        return res
+          .status(200)
+          .json({ user: userByGoogleId, token: googleToken });
       }
-    }
-    const userByEmail = await User.findOne({ email: email });
-    if (userByEmail) {
-      // add googleId and google image to existingUser
-      const updatedUser = await User.findByIdAndUpdate(
-        userByEmail._id,
-        {
-          googleId: googleId,
-          image,
-        },
-        {
-          new: true,
-        }
-      );
-      return res.status(201).json({ user: updatedUser, token: googleToken });
     } else {
-      const newUser = new User({
-        email,
-        lastName,
-        givenName,
-        googleId,
-        imageUrl,
-      });
-      await newUser.save();
-      res.status(201).json({ user: newUser, token: googleToken });
+      console.log(
+        `Otrera doesn't have a user account in the db with googleId ${googleId}. Querying db for an otrera user account with google account email address ${email}`
+      );
+      const userByEmail = await User.findOne({ email: email });
+      if (userByEmail) {
+        console.log(
+          `Found an otrera user account with an email address matching the google Oauth token: ${userByEmail?.email}`
+        );
+        let updatedUser;
+        if (!userByGoogleId?.image && image) {
+          console.log(
+            `Updating otrera user account with the googleId and google image of google Oauth token.`
+          );
+          // add googleId and google image to existingUser
+          updatedUser = await User.findByIdAndUpdate(
+            userByEmail._id,
+            {
+              googleId: googleId,
+              image,
+            },
+            {
+              new: true,
+            }
+          );
+          return res
+            .status(201)
+            .json({ user: updatedUser, token: googleToken });
+        } else {
+          console.log(
+            `Updating otrera user account with the googleId of google Oauth token.`
+          );
+          // add googleId and google image to existingUser
+          updatedUser = await User.findByIdAndUpdate(
+            userByEmail._id,
+            {
+              googleId: googleId,
+            },
+            {
+              new: true,
+            }
+          );
+          return res
+            .status(201)
+            .json({ user: updatedUser, token: googleToken });
+        }
+      } else {
+        const newUser = new User({
+          email,
+          lastName,
+          givenName,
+          googleId,
+          imageUrl,
+        });
+        await newUser.save();
+        res.status(201).json({ user: newUser, token: googleToken });
+      }
     }
   } catch (error) {
     res.status(500).json({
