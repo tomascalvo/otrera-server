@@ -66,13 +66,13 @@ mongoose
   .then(() => EDB.get(`/exercises`))
   .then(({ data: EDBmovementsUnsecure }) => {
     console.log(`EDBmovements.length: `, EDBmovementsUnsecure.length);
-    EDBmovementsUnsecure = EDBmovementsUnsecure.map((EDBmovement) => {
+    EDBmovements = EDBmovementsUnsecure.map((EDBmovement) => {
       const { gifUrl: gifUrlUnsecure } = EDBmovement;
       const indexOfp = gifUrlUnsecure.indexOf("p");
       return {
         ...EDBmovement,
         gifUrl:
-          gifUrlUnsecure.slice(0, indexOfp) + "s" + gifUrlUnsecure.slice(indexOfp),
+          gifUrlUnsecure.slice(0, indexOfp + 1) + "s" + gifUrlUnsecure.slice(indexOfp + 1),
       };
     });
   })

@@ -80,6 +80,8 @@ export const getProgress = async (req, res) => {
   const userId = req.userId;
   const targetId = req.params.userId !== "me" ? req.params.userId : userId;
 
+  console.log(`targetId: ${targetId}`);
+  
   try {
     // get an array of all target user goals
 
@@ -92,6 +94,8 @@ export const getProgress = async (req, res) => {
     if (goals === []) {
       res.status(200).json([]);
     }
+
+    console.log(`User ${targetId} has ${goals.length} goals`);
 
     // populate goal.EDBmovement property
 
@@ -227,8 +231,6 @@ export const getProgress = async (req, res) => {
             });
           }),
         ].flat(2);
-
-        // consider changing the key "attepts" to the more-accurate key "sets"
 
         progress.push({
           ...goal,

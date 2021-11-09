@@ -59,8 +59,7 @@ export async function getBodyStatusRecordsByUserIdForAllRegions(id) {
       })
     );
 
-    console.log('documents.length: ');
-    console.dir(documents.length);
+    console.log(`documents.length: ${documents.length}`);
     // console.dir(documents);
   
     if (documents.length === 0) {

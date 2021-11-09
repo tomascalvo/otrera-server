@@ -192,8 +192,8 @@ export const suggestPlans = async (req, res) => {
       targetId === "me" ? userId : targetId
     );
 
-    // console.log('bodyStatus:');
-    // console.dir(bodyStatus);
+    console.log('bodyStatus:');
+    console.dir(bodyStatus);
 
     if (bodyStatus === []) {
       res.status(200).json([]);
