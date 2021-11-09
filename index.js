@@ -54,7 +54,8 @@ const EDB = axios.create({
   },
 });
 
-export var EDBmovements;
+// export var EDBmovements;
+var EDBmovements;
 
 mongoose
   .connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -71,3 +72,12 @@ mongoose
   .catch((error) => console.log(error.message));
 
 mongoose.set("useFindAndModify", false);
+
+export var EDBmovementsSecure = EDBmovements.map((EDBmovement) => {
+  const { gifUrl: gifUrlUnsecure } = EDBmovement;
+  const indexOfp = gifUrlUnsecure.indexOf("p");
+  return {
+    ...EDBmovement,
+    gifUrl: gifUrlUnsecure.slice(0, indexOfp) + "s" + gifUrlUnsecure.slice(indexOfp),
+  };
+});
