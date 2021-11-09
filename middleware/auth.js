@@ -2,13 +2,25 @@ import jwt, { decode } from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 const auth = async (req, res, next) => {
+  const elideToken = (string) => {
+    if (string.length < 32) {
+      return string;
+    } else {
+      return string.splice(4, string.length - 8, "...");
+    }
+  }
   try {
-    console.log('auth middleware invoked');
-    console.log(`authorization header: ${req.headers.authorization}`);
-    const token = req.headers.authorization.split(" ")[1];
-    console.log(`token: ...${token.slice(-4)}`);
+    console.log("auth middleware invoked");
+    const authHeader = req.headers.authorization;
+    console.log(
+      `authorization header: ${authHeader.slice(
+        " ")[0] + " " + elideToken(authHeader.slice(" ")[1])}`
+    );
+    const token = authHeader.split(" ")[1];
+    console.log(`token: ...${elideToken(token)}`);
     const isCustomAuth = token.length < 500;
     console.log(`token is custom auth token: ${isCustomAuth}`);
+    console.log(isCustomAuth ? 'Token is custom auth token.' : 'Token is googleOauth token');
     let decodedData;
     if (token && isCustomAuth) {
       decodedData = jwt.verify(token, "jwtSecretTest");
@@ -21,9 +33,11 @@ const auth = async (req, res, next) => {
       const user = await User.findOne({ googleId }).exec();
       if (user) {
         // console.log('user._id: ', user._id);
-        req.userId = user._id
+        req.userId = user._id;
       } else {
-        console.log('auth middleware error: can\'t find user with googleId from token');
+        console.log(
+          "auth middleware error: can't find user with googleId from token"
+        );
       }
     }
     next();
