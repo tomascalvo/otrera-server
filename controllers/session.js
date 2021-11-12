@@ -177,7 +177,39 @@ export const getRecentSessions = async (req, res) => {
   }
 };
 
+export const getPreviousSessions = async (req, res) => {
+  console.log(`getPreviousSessions controller invoked`);
+  const { userId } = req.params;
+  try {
+    const previousSessions = await Session.find({
+      $and: [
+        {
+          $or: [
+            { invitees: userId },
+            { attendees: { user: userId } },
+            { leader: userId },
+            { creator: userId },
+          ],
+        },
+        {
+          startTime: { $lt: moment().subtract(1, "hours") },
+        },
+      ]
+    })
+    .populate("plan")
+    .populate("leader")
+    .populate("attendees")
+    .populate("invitees")
+    .sort("startTime");
+    res.status(200).json(previousSessions);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
 export const getUpcomingSessions = async (req, res) => {
+  console.log(`getUpcomingSessions controller invoked`);
+
   const { userId } = req.params;
   try {
     const sessions = await Session.find({

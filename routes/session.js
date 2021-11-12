@@ -6,6 +6,7 @@ import {
     getSession,
     getSessionsByPlanAndUser,
     getRecentSessions,
+    getPreviousSessions,
     getUpcomingSessions,
 } from '../controllers/session.js';
 
@@ -20,6 +21,7 @@ router.get(`/plan/:planId/user/:userId`, auth, getSessionsByPlanAndUser,
 );
 router.get(`/recent/plan/:planId/user/:userId`, auth, getRecentSessions,
 );
+router.get(`/user/:userId/previous`, auth, getPreviousSessions);
 router.get(`/user/:userId/upcoming`, auth, getUpcomingSessions);
 
 export default router;
