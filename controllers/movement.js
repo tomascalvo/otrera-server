@@ -25,6 +25,37 @@ export const getMovements = async (req, res) => {
   }
 };
 
+export const getMovementById = async (req, res) => {
+  console.log(`controller getMovementById invoked`);
+  console.log("req.params.id:");
+  console.log(req.params.id);
+  try {
+    const collectionExists = await Movement.findOne();
+    console.log("Movement collectionExists:");
+    console.dir(collectionExists);
+    if (collectionExists) {
+      const movement = await Movement.findById(req.params.id);
+      console.log(`movement:`);
+      console.dir(movement);
+      if (movement) {
+        return res.status(200).json(movement);
+      }
+    }
+    const EDBmovement = EDBmovements.find((EDBmovement) => {
+      return EDBmovement.id === req.params.id;
+    });
+    console.log("EDBmovement:");
+    console.dir(EDBmovement);
+    if (EDBmovement) {
+      return res.status(200).json(EDBmovement);
+    } else {
+      res.status(404).json({ message: error.message });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getDefaultMovements = async (req, res) => {
   const defaultMovementIds = ["0025", "1457", "0032", "0652", "0043"];
   try {
@@ -41,11 +72,14 @@ export const getDefaultMovements = async (req, res) => {
 };
 
 export const searchMovements = async (req, res) => {
-  
   console.log("searchMovements controller called");
 
   try {
-    const { query, target: targetMuscle, equipment: selectedEquipment } = req.params
+    const {
+      query,
+      target: targetMuscle,
+      equipment: selectedEquipment,
+    } = req.params;
     console.log(`targetMuscle: ${targetMuscle}`);
     console.log(`selectedEquipment: ${selectedEquipment}`);
     console.log(`query: ${query}`);
@@ -53,26 +87,36 @@ export const searchMovements = async (req, res) => {
     const queryStrings = query !== "undefined" ? query.split(" ") : undefined;
     console.log(`queryStrings: ${queryStrings}`);
 
-    if (query === "undefined" && targetMuscle === "undefined" && (selectedEquipment === undefined || selectedEquipment === "all")) {
+    if (
+      query === "undefined" &&
+      targetMuscle === "undefined" &&
+      (selectedEquipment === undefined || selectedEquipment === "all")
+    ) {
       return res.status(200).json(EDBmovements.slice(0, 20));
     }
 
     const results = EDBmovements.filter(
       ({ bodyPart, equipment, name: movementName, target }) => {
-        
-        const muscleMatch = targetMuscle === "undefined" ? true : bodyPart === targetMuscle;
+        const muscleMatch =
+          targetMuscle === "undefined" ? true : bodyPart === targetMuscle;
 
-        const equipmentMatch = selectedEquipment === "undefined" ? true : selectedEquipment === equipment;
-        
+        const equipmentMatch =
+          selectedEquipment === "undefined"
+            ? true
+            : selectedEquipment === equipment;
+
         const movementTags = [bodyPart, equipment, movementName, target]
           .map((value) => {
             return value.split(" ");
           })
           .flat();
-        
-        const queryStringMatch = (query === "undefined") ? true : movementTags.some((tag) => {
-          return queryStrings.includes(tag);
-        });
+
+        const queryStringMatch =
+          query === "undefined"
+            ? true
+            : movementTags.some((tag) => {
+                return queryStrings.includes(tag);
+              });
 
         return queryStringMatch && muscleMatch && equipmentMatch;
       }

@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 
 import User from "../models/user.model.js";
 
+import { authenticateRequest, validateMovementId } from "./helperMethods.js";
+
 export const createUser = async (req, res) => {
   const userData = req.body;
   const newUser = new User(userData);
@@ -177,7 +179,9 @@ export const googleSignin = async (req, res) => {
             .json({ user: updatedUser, token: googleToken });
         }
       } else {
-        console.log(`Otrera doesn't have a user account with email address ${email}. Creating a new otrera user account.`);
+        console.log(
+          `Otrera doesn't have a user account with email address ${email}. Creating a new otrera user account.`
+        );
         const newUser = new User({
           email,
           lastName,
@@ -221,5 +225,85 @@ export const getUser = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     res.status(404).json({ message: error.message });
+  }
+};
+
+export const addFavorite = async (req, res) => {
+  console.log("addFavorite controller invoked");
+  try {
+    // authenticate user & get user document
+    const user = await authenticateRequest(req);
+    // validate movementId
+    const { movementId } = req.params;
+    await validateMovementId(movementId);
+    console.log("movement has been validated");
+    // validate that movementId is not a current favoriteMovement for userId
+    if (user?.favoriteMovements.includes(movementId)) {
+      console.log(
+        `User ${user._id} already has favoriteMovement with id ${movementId}`
+      );
+      return res
+        .status(409)
+        .send(
+          `User ${user._id} already has favoriteMovement with id ${movementId}`
+        );
+    }
+    // invoke Model.findByIdAndUpdate() to add movementId to user.favoriteMovements
+    console.log("invoking Model.findByIdAndUpdate()");
+    const userWithNewFavorite = await User.findByIdAndUpdate(
+      user._id,
+      {
+        favoriteMovements: [
+          ...user?.favoriteMovements,
+          movementId,
+        ],
+      },
+      { 
+        new: true, 
+      }
+    );
+    console.log(`userWithNewFavorite:`);
+    console.dir(userWithNewFavorite);
+    // return updated user document in response
+    res.status(200).json(userWithNewFavorite);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeFavorite = async (req, res) => {
+  console.log("removeFavorite controller invoked");
+  try {
+    // authenticate user & get user document
+    const user = await authenticateRequest(req);
+    // validate movementId
+    const { movementId } = req.params;
+    console.log(`movementId: ${movementId}`);
+    await validateMovementId(movementId);
+    // validate that movementId is indeed a current favoriteMovement for userId
+    if (!user?.favoriteMovements.includes(movementId)) {
+      return res
+        .status(409)
+        .send(
+          `User ${user._id} does not have a favoriteMovement with id ${movementId}`
+        );
+    }
+    // invoke User.findByIdAndUpdate to remove movementId from favoriteMovements
+    console.log("invoking Model.findByIdAndUpdate()");
+    const userWithFewerFavorites = await User.findByIdAndUpdate(
+      user._id,
+      {
+        favoriteMovements: user?.favoriteMovements.filter((favoriteMovement) => {
+          return favoriteMovement !== movementId;
+        }),
+      },
+      { 
+        new: true, 
+      }
+    );
+    // return updated user document in response
+    res.status(200).json(userWithFewerFavorites);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

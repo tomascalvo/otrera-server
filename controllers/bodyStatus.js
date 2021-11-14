@@ -1,20 +1,9 @@
 import mongoose from "mongoose";
 import BodyStatus from "../models/bodyStatus.model.js";
-
-function validateObjectId(id) {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res
-      .status(404)
-      .send(
-        `${userId} is not a valid mongoose ObjectId.`
-      );
-  } else {
-    console.log(`ObjectId passes validation: ${id}`);
-  }
-}
+import { validateObjectId } from "./helperMethods.js";
 
 export async function getBodyStatusRecordsByUserIdForAllRegions(id) {
-  console.log('getBodyStatusRecordsByUserIdForAllRegions helper method called');
+  console.log("getBodyStatusRecordsByUserIdForAllRegions helper method called");
   // console.log(`getting bodyStatuses for userId ${id}`);
   const documents = [];
   try {
@@ -45,9 +34,10 @@ export async function getBodyStatusRecordsByUserIdForAllRegions(id) {
     if (documents.length === 0) {
       return [];
     }
-
   } catch {
-    console.log('an error has occurred in getBodyStatusRecordsByUserIdForAllRegions()');
+    console.log(
+      "an error has occurred in getBodyStatusRecordsByUserIdForAllRegions()"
+    );
   }
 
   // MAP EACH RECORD TO AN OBJECT { [region]: condition }
@@ -67,7 +57,7 @@ export async function getBodyStatusRecordsByUserIdForAllRegions(id) {
 }
 
 const saveBodyStatusDocs = async (bodyStatusesObject, userId) => {
-  console.log('saveBodyStatusDocs helper method invoked');
+  console.log("saveBodyStatusDocs helper method invoked");
   try {
     await Promise.all(
       Object.keys(bodyStatusesObject).map(async (key) => {
@@ -84,7 +74,7 @@ const saveBodyStatusDocs = async (bodyStatusesObject, userId) => {
     console.log(error);
     res.status(409).json({
       message: error.message,
-    })
+    });
   }
 };
 
@@ -109,32 +99,89 @@ export const createBodyStatus = async (req, res) => {
 };
 
 export const createFullRecovery = async (req, res) => {
-
-  console.log('createFullRecovery controller called');
+  console.log("createFullRecovery controller called");
 
   // validate user id
   const { userId } = req.params;
   validateObjectId(userId);
-  
-  try {
 
+  try {
     // get all muscle names
-    const allMuscleNames = ["abductors", "adductors-left", "adductors", "abductors-right", "abductors-left", "abs", "biceps-left", "back", "biceps", "adductors-right", "biceps-right", "cardio", "cardiovascular system", "calves-right", "calves-left", "calves", "chest", "delts", "delts-right", "delts-left", "forearms", "forearms-left", "forearms-right", "glutes", "glutes-left", "glutes-right", "hamstrings", "hamstrings-left", "hamstrings-right", "lats", "lats-left", "lats-right", "levator scapulae", "lower legs", "lower arms", "neck", "pectorals-left", "pectorals", "pectorals-right", "quads", "traps", "shoulders", "serratus anterior-right", "serratus anterior-left", "traps-left", "triceps-left", "traps-right", "serratus anterior", "spine", "triceps", "undefined-left", "triceps-right", "upper arms", "undefined-right", "waist", "upper back-right", "upper back", "upper legs", "upper back-left"];
+    const allMuscleNames = [
+      "abductors",
+      "adductors-left",
+      "adductors",
+      "abductors-right",
+      "abductors-left",
+      "abs",
+      "biceps-left",
+      "back",
+      "biceps",
+      "adductors-right",
+      "biceps-right",
+      "cardio",
+      "cardiovascular system",
+      "calves-right",
+      "calves-left",
+      "calves",
+      "chest",
+      "delts",
+      "delts-right",
+      "delts-left",
+      "forearms",
+      "forearms-left",
+      "forearms-right",
+      "glutes",
+      "glutes-left",
+      "glutes-right",
+      "hamstrings",
+      "hamstrings-left",
+      "hamstrings-right",
+      "lats",
+      "lats-left",
+      "lats-right",
+      "levator scapulae",
+      "lower legs",
+      "lower arms",
+      "neck",
+      "pectorals-left",
+      "pectorals",
+      "pectorals-right",
+      "quads",
+      "traps",
+      "shoulders",
+      "serratus anterior-right",
+      "serratus anterior-left",
+      "traps-left",
+      "triceps-left",
+      "traps-right",
+      "serratus anterior",
+      "spine",
+      "triceps",
+      "undefined-left",
+      "triceps-right",
+      "upper arms",
+      "undefined-right",
+      "waist",
+      "upper back-right",
+      "upper back",
+      "upper legs",
+      "upper back-left",
+    ];
     const fullRecovery = allMuscleNames.reduce((result, currentMuscleName) => {
-      return Object.assign(result, {[currentMuscleName]: "recovered"});
+      return Object.assign(result, { [currentMuscleName]: "recovered" });
     }, {});
     console.log("fullRecovery:");
     console.dir(fullRecovery);
 
     // save a bodyStatus document for each muscle name with status="recovered"
     await saveBodyStatusDocs(fullRecovery, userId);
-    
+
     // return a confirmation object
     const newBodyStatuses = await getBodyStatusRecordsByUserIdForAllRegions(
       userId
     );
     res.status(201).json(newBodyStatuses);
-
   } catch (error) {
     res.status(409).json({ message: error.message });
   }
@@ -174,8 +221,7 @@ export const createBodyStatusesByUser = async (req, res) => {
 };
 
 export const getCurrentBodyStatusesByUser = async (req, res) => {
-
-  console.log('getCurrentBodyStatusesByUser controller called');
+  console.log("getCurrentBodyStatusesByUser controller called");
 
   // VALIDATE USER ID
   const { id: userId } = req.params;

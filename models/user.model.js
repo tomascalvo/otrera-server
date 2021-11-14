@@ -8,10 +8,9 @@ const userSchema = mongoose.Schema(
     googleId: { type: String },
     image: String,
     password: { type: String },
-    favoriteExercises: [
+    favoriteMovements: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Exercise",
+        type: String
       },
     ],
     bannedExercises: [

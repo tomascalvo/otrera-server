@@ -2,6 +2,7 @@ import express from 'express';
 
 import {
     createSession,
+    createSingleMovementSession,
     getSessions,
     getSession,
     getSessionsByPlanAndUser,
@@ -15,6 +16,7 @@ import auth from '../middleware/auth.js';
 const router = express.Router();
 
 router.post('/', auth, createSession);
+router.post('/movement/:movementId', auth, createSingleMovementSession);
 router.get('/', auth, getSessions);
 router.get('/:id', auth, getSession),
 router.get(`/plan/:planId/user/:userId`, auth, getSessionsByPlanAndUser,

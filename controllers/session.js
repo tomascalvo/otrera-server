@@ -5,8 +5,13 @@ import { EDBmovements } from "../index.js";
 
 // models
 
-import Session from "../models/session.model.js";
 import Performance from "../models/performance.model.js";
+import Session from "../models/session.model.js";
+import Plan from "../models/plan.model.js";
+import Movement from '../models/movement.model.js';
+// helper methods
+
+import { authenticateRequest, validateMovementId } from './helperMethods.js';
 
 export const createSession = async (req, res) => {
   try {
@@ -14,6 +19,52 @@ export const createSession = async (req, res) => {
     const newSession = new Session(sessionData);
     await newSession.save();
     res.status(201).json(newSession);
+  } catch (error) {
+    res.status(409).json({ message: error.message });
+  }
+};
+
+export const createSingleMovementSession = async (req, res) => {
+  console.log('controller createSingleMovementSession invoked');
+  try {
+    await authenticateRequest(req);
+    console.log('request authenticated');
+    const movement = await validateMovementId(req.params.movementId);
+    console.log('movement validated');
+    console.log('movement:')
+    console.dir(movement);
+    const planData = {
+      title: movement?.name || movement?.title,
+      creator: req.userId,
+      description: `A workout consisting of only ${movement?.name || movement?.title}.`,
+      image: movement?.gifUrl || movement?.image,
+      exercises: [
+        {
+          EDBmovement: req.params.movementId.length === 4 ? req.params.movementId : undefined,
+          movement: mongoose.Types.ObjectId.isValid(req.params.movementId) ? req.params.movementId : undefined,
+          index: 0,
+        },
+      ],
+      equipment: [
+        movement?.equipment,
+      ],
+    };
+    console.log('planData:')
+    console.dir(planData);
+    const singleMovementPlan = new Plan(planData);
+    console.log('singleMovementPlan:')
+    console.dir(singleMovementPlan);
+    await singleMovementPlan.save();
+    console.log('plan saved');
+    const sessionData = {
+      plan: singleMovementPlan._id,
+      creator: req.userId,
+      estimatedDuration: 10,
+    };
+    const singleMovementSession = new Session(sessionData);
+    await singleMovementSession.save();
+    console.log('session saved');
+    res.status(201).json(singleMovementSession);
   } catch (error) {
     res.status(409).json({ message: error.message });
   }
