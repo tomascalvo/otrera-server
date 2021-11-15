@@ -142,7 +142,13 @@ export const duplicatePlan = async (req, res) => {
 
 export const getPlans = async (req, res) => {
   try {
-    const plans = await Plan.find()
+    const plans = await Plan.find({
+      "exercises.0": { $exists: true },
+      "description": {
+        "$regex": "^((?!A workout consisting of a single movement: ).)*$",
+        "$options": "i",
+      },
+    })
       .populate("creator")
       .populate({ path: "exercises", populate: { path: "exercise" } });
     res.status(200).json(plans);
