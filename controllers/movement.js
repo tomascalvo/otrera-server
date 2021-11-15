@@ -17,9 +17,8 @@ export const createMovement = async (req, res) => {
 
 export const getMovements = async (req, res) => {
   try {
-    const movements = await Movement.find();
-    console.log(movements);
-    res.status(200).json(movements);
+    const MDBmovements = await Movement.find();
+    res.status(200).json([...MDBmovements, ...EDBmovements]);
   } catch (error) {
     res.status(404).json({ message: error.message });
   }

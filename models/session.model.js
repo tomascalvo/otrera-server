@@ -30,6 +30,7 @@ const sessionSchema = mongoose.Schema(
       }
     ],
     leaderNote: { type: String },
+    isSingleMovementSession: { type: Boolean, default: false },
   },
   { timestamps: true, toJSON: { virtuals: true } }
 );

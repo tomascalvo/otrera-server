@@ -5,7 +5,8 @@ import User from "../models/user.model.js";
 import Plan from "../models/plan.model.js";
 import Session from "../models/session.model.js";
 import { EDBmovements } from "../index.js";
-import { getBodyStatusRecordsByUserIdForAllRegions } from './bodyStatus.js';
+import { getBodyStatusRecordsByUserIdForAllRegions } from "./bodyStatus.js";
+import { authenticateRequest, validateObjectId } from "./helperMethods.js";
 
 export const createPlan = async (req, res) => {
   console.log("createPlan controller invoked");
@@ -169,36 +170,22 @@ export const getPlan = async (req, res) => {
 
 export const suggestPlans = async (req, res) => {
   console.log("plan.js controller suggestPlans called");
+  // authenticate user
+  await authenticateRequest(req);
   const userId = req.userId;
-  // console.log("req.userId: ", req.userId);
+  // validate targetId
   const { targetId } = req.params;
-  // console.log("req.params.targetId: ", targetId);
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res
-      .status(404)
-      .send(
-        `No user with id: ${userId} exists. Cannot fetch workout plan suggestions.`
-      );
+  if (targetId !== "me") {
+    validateObjectId(targetId);
   }
-  if (targetId !== "me" && !mongoose.Types.ObjectId.isValid(targetId)) {
-    return res
-      .status(404)
-      .send(
-        `No user with id: ${targetId} exists. Cannot fetch workout plan suggestions.`
-      );
-  }
+  // assess current body status of target user
   try {
     const bodyStatus = await getBodyStatusRecordsByUserIdForAllRegions(
       targetId === "me" ? userId : targetId
     );
-
-    console.log('bodyStatus:');
-    console.dir(bodyStatus);
-
     if (bodyStatus === []) {
       res.status(200).json([]);
     }
-    
     const soreMuscles = Object.keys(bodyStatus)
       .filter((muscle) => {
         return bodyStatus[muscle] !== "recovered";
@@ -210,16 +197,16 @@ export const suggestPlans = async (req, res) => {
           return muscleName;
         }
       });
-    // console.log("soreMuscles: ");
-    // console.dir(soreMuscles);
     const suggestions = await Plan.find({
       "exercises.0": { $exists: true },
+      "description": {
+        "$regex": "^((?!A workout consisting of a single movement: ).)*$",
+        "$options": "i",
+      },
     })
       .populate("creator")
       .populate({ path: "exercises", populate: { path: "movement" } })
       .lean();
-    // console.log("suggestions.length: ");
-    // console.dir(suggestions.length);
     const populatedSuggestions = suggestions.map((suggestion) => ({
       ...suggestion,
       exercises: suggestion.exercises.map((exercise) => ({
@@ -244,7 +231,9 @@ export const suggestPlans = async (req, res) => {
         return true;
       }
     });
-    console.log(`plan.js controller suggestPlans filteredSuggestions.length: ${filteredSuggestions.length}`);
+    console.log(
+      `plan.js controller suggestPlans filteredSuggestions.length: ${filteredSuggestions.length}`
+    );
     res.status(200).json(filteredSuggestions);
   } catch (error) {
     res.status(404).json({ message: error.message });

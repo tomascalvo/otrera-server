@@ -36,7 +36,7 @@ export const createSingleMovementSession = async (req, res) => {
     const planData = {
       title: movement?.name || movement?.title,
       creator: req.userId,
-      description: `A workout consisting of only ${movement?.name || movement?.title}.`,
+      description: `A workout consisting of a single movement: ${movement?.name || movement?.title}.`,
       image: movement?.gifUrl || movement?.image,
       exercises: [
         {
@@ -60,6 +60,7 @@ export const createSingleMovementSession = async (req, res) => {
       plan: singleMovementPlan._id,
       creator: req.userId,
       estimatedDuration: 10,
+      isSingleMovementSession: true,
     };
     const singleMovementSession = new Session(sessionData);
     await singleMovementSession.save();
@@ -275,6 +276,9 @@ export const getUpcomingSessions = async (req, res) => {
         },
         {
           startTime: { $gte: moment().subtract(1, "hours") },
+        },
+        {
+          isSingleMovementSession: false
         },
       ],
     })
