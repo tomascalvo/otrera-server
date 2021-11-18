@@ -6,6 +6,8 @@ import {
     getMovementById,
     getDefaultMovements,
     searchMovements,
+    addFavorite,
+    removeFavorite,
 } from "../controllers/movement.js";
 
 import auth from '../middleware/auth.js';
@@ -16,6 +18,9 @@ router.post("/", auth, createMovement);
 router.get("/", getMovements);
 router.get('/:id', getMovementById);
 router.get("/default", getDefaultMovements);
-router.get("/:query/:target/:equipment", searchMovements);
+router.get("/:query/:targets/:equipment", auth, searchMovements);
+router.patch('/addFavorite/:movementId', auth, addFavorite);
+router.patch('/removeFavorite/:movementId', auth, removeFavorite);
+
 
 export default router;

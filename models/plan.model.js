@@ -1,12 +1,9 @@
 import mongoose from "mongoose";
 
 const exerciseSubSchema = mongoose.Schema({
-  EDBmovement: {
-    type: String
-  },
   movement: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Movement",
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Movement",
   },
   index: { type: Number, required: true },
   reps: Number,

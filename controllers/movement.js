@@ -3,6 +3,8 @@
 import Movement from "../models/movement.model.js";
 import { EDBmovements } from "../index.js";
 
+import { authenticateRequest, validateMovementId } from "./helperMethods.js";
+
 export const createMovement = async (req, res) => {
   // console.log('createMovement controller called');
   const movementData = req.body;
@@ -75,56 +77,163 @@ export const searchMovements = async (req, res) => {
 
   try {
     const {
-      query,
-      target: targetMuscle,
+      query: keywords,
+      targets: selectedTargets,
       equipment: selectedEquipment,
     } = req.params;
-    console.log(`targetMuscle: ${targetMuscle}`);
+
+    const { userId } = req;
+
+    console.log(`selectedTargets: ${selectedTargets}`);
+    console.log(`typeof selectedTargets: ${typeof selectedTargets}`);
     console.log(`selectedEquipment: ${selectedEquipment}`);
-    console.log(`query: ${query}`);
+    console.log(`typeof selectedEquipment: ${typeof selectedEquipment}`);
+    console.log(`keywords: ${keywords}`);
+    console.log(`typeof keywords: ${typeof keywords}`);
 
-    const queryStrings = query !== "undefined" ? query.split(" ") : undefined;
-    console.log(`queryStrings: ${queryStrings}`);
+    // SEARCH RESULT SORTING ALGORITHM
 
-    if (
-      query === "undefined" &&
-      targetMuscle === "undefined" &&
-      (selectedEquipment === undefined || selectedEquipment === "all")
-    ) {
-      return res.status(200).json(EDBmovements.slice(0, 20));
+    // FAVORITE MOVEMENTS
+    // TARGETS RECOVERED MUSCLES
+    // OTHER FAVORITE MOVEMENTS
+    // POPULAR MOVEMENTS
+    // TARGETS RECOVERED MUSCLES && USES FAVORITE EQUIPMENT
+    // TARGETS RECOVERED MUSCLES
+    // USES FAVORITE EQUIPMENT
+    // OTHER POPULAR MOVEMENTS
+    // NOT FAVORITE, NEVER PERFORMED
+    // TARGETS RECOVERED MUSCLES && USES FAVORITE EQUIPMENT
+    // TARGETS RECOVERED MUSCLES
+    // USES FAVORITE EQUIPMENT
+    // THE REST
+
+    // ADD AUTO-INCREMENTING PROPERTIES:
+    // POPULARITY: NUMBER OF LIKES, LENGTH OF LIKES ARRAY
+    // UBIQUITY: NUMBER OF USES, NUMBER OF PERFORMANCES IN WHICH MOVEMENT APPEARS
+
+    var query = Movement.find();
+
+    if (selectedTargets !== "undefined") {
+      console.log(`selectedTargets !== 'undefined'`);
+      console.log(
+        `adding .where() clause to query for targets: ${selectedTargets}`
+      );
+      query = query.where({
+        targets: { $in: selectedTargets.split("-") },
+      });
     }
 
-    const results = EDBmovements.filter(
-      ({ bodyPart, equipment, name: movementName, target }) => {
-        const muscleMatch =
-          targetMuscle === "undefined" ? true : bodyPart === targetMuscle;
+    if (selectedEquipment !== "undefined" && selectedEquipment !== "all") {
+      console.log(`selectedEquipment !== 'undefined'`);
+      console.log(
+        `adding .where() clause to query for equipment: ${selectedEquipment}`
+      );
+      query = query.where({
+        equipment: selectedEquipment,
+      });
+    }
 
-        const equipmentMatch =
-          selectedEquipment === "undefined"
-            ? true
-            : selectedEquipment === equipment;
-
-        const movementTags = [bodyPart, equipment, movementName, target]
-          .map((value) => {
-            return value.split(" ");
+    if (keywords !== "undefined") {
+      console.log(`keywords !== 'undefined'`);
+      console.log(
+        `adding .where() clause to query for title: ${keywords}`
+      );
+      const keywordsSplit =
+        keywords !== "undefined" ? keywords.split(" ") : undefined;
+      const keywordsRegExp =
+        keywordsSplit
+          .map((keyword) => {
+            return `(?=.*${keyword})`;
           })
-          .flat();
+          .join() + ".+";
+      query = query.where({
+        title: new RegExp(keywordsRegExp, "i"),
+      });
+    }
 
-        const queryStringMatch =
-          query === "undefined"
-            ? true
-            : movementTags.some((tag) => {
-                return queryStrings.includes(tag);
-              });
+    const result = await query.sort({ likes: -1 }).limit(32);
 
-        return queryStringMatch && muscleMatch && equipmentMatch;
-      }
-    );
-    console.log(`results.length: ${results.length}`);
-    const slicedResults = results.slice(0, 20);
-    console.log(`slicedResults.length: ${slicedResults.length}`);
-    res.status(200).json(slicedResults);
+    res.status(200).json(result);
   } catch (error) {
     res.status(404).json({ message: error.message });
+  }
+};
+
+export const addFavorite = async (req, res) => {
+  console.log("addFavorite controller invoked");
+  try {
+    // authenticate user & get user document
+    const { _id: userId } = await authenticateRequest(req);
+    // validate movementId
+    const { movementId } = req.params;
+    const movement = await validateMovementId(movementId);
+    console.log("movement has been validated");
+    // validate that movementId is not a current favoriteMovement for userId
+    if (movement?.likes && movement?.likes.includes(userId)) {
+      console.log(`User ${userId} already likes movement ${movementId}`);
+      return res
+        .status(409)
+        .send(`User ${userId} already likes movement ${movementId}`);
+    }
+    // invoke Model.findByIdAndUpdate() to add movementId to user.favoriteMovements
+    console.log("invoking Model.findByIdAndUpdate()");
+    console.log(`movementId: ${movementId}`);
+    console.log(`userId: ${userId}`);
+    const updatedMovement = await Movement.findByIdAndUpdate(
+      movementId,
+      {
+        likes: [...movement.likes, userId],
+      },
+      {
+        // set this option to return the new, updated document rather than the old, original document
+        new: true,
+      }
+    );
+    console.log(`updatedMovement:`);
+    console.dir(updatedMovement);
+    // return updated user document in response
+    res.status(200).json(updatedMovement);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeFavorite = async (req, res) => {
+  console.log("removeFavorite controller invoked");
+  try {
+    // authenticate user
+    const { _id: userId } = await authenticateRequest(req);
+    // validate movementId & get movement document
+    const { movementId } = req.params;
+    console.log(`movementId: ${movementId}`);
+    const movement = await validateMovementId(movementId);
+    // validate that userId is indeed a like for movement
+    if (!movement?.likes.includes(userId)) {
+      return res
+        .status(409)
+        .send(`User ${userId} does not like movement ${movementId}`);
+    }
+    // invoke User.findByIdAndUpdate to remove movementId from favoriteMovements
+    console.log("invoking Model.findByIdAndUpdate()");
+    console.log(`movementId: ${movementId}`);
+    const updatedMovement = await Movement.findByIdAndUpdate(
+      movementId,
+      {
+        likes: movement?.likes.filter((like) => {
+          console.log(`like: ${like}, userId: ${userId}`);
+          console.log(`like !== userId: ${like !== userId}`);
+          return !userId.equals(like);
+        }),
+      },
+      {
+        new: true,
+      }
+    );
+    console.log(`updatedMovement:`);
+    console.dir(updatedMovement);
+    // return updated user document in response
+    res.status(200).json(updatedMovement);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

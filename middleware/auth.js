@@ -12,23 +12,23 @@ const auth = async (req, res, next) => {
     }
   };
   try {
-    console.log("auth middleware invoked");
+    // console.log("auth middleware invoked");
     const authHeader = req.headers.authorization;
     const authHeaderSplit = authHeader.split(" ");
-    console.log(
-      `authorization header: ${
-        authHeaderSplit[0] + " " + elideToken(authHeaderSplit[1])
-      }`
-    );
+    // console.log(
+    //   `authorization header: ${
+    //     authHeaderSplit[0] + " " + elideToken(authHeaderSplit[1])
+    //   }`
+    // );
     const token = authHeader.split(" ")[1];
-    console.log(`token: ${elideToken(token)}`);
+    // console.log(`token: ${elideToken(token)}`);
     const isCustomAuth = token.length < 500;
-    console.log(`token is custom auth token: ${isCustomAuth}`);
-    console.log(
-      isCustomAuth
-        ? "Token is custom auth token."
-        : "Token is googleOauth token"
-    );
+    // console.log(`token is custom auth token: ${isCustomAuth}`);
+    // console.log(
+    //   isCustomAuth
+    //     ? "Token is custom auth token."
+    //     : "Token is googleOauth token"
+    // );
     let decodedData;
     if (token && isCustomAuth) {
       decodedData = jwt.verify(token, "jwtSecretTest");

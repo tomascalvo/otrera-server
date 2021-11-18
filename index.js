@@ -7,6 +7,8 @@ import axios from "axios";
 import cors from "cors";
 import dotenv from "dotenv";
 
+// routes
+
 import movementRoutes from "./routes/movement.js";
 import userRoutes from "./routes/user.js";
 import bodyStatusRoutes from "./routes/bodyStatus.js";
@@ -14,6 +16,10 @@ import planRoutes from "./routes/plan.js";
 import sessionRoutes from "./routes/session.js";
 import performanceRoutes from "./routes/performance.js";
 import goalRoutes from "./routes/goal.js";
+
+// models
+
+import Movement from "./models/movement.model.js";
 
 dotenv.config();
 
@@ -76,6 +82,39 @@ mongoose
       };
     });
   })
+  .then(() => Movement.findOne())
+  .then((movementCollectionExists) => {
+    const saveNewMovement = async (EDBmovement) => {
+      // save a movement document to mdb
+      const newMovement = new Movement({
+        EDB: EDBmovement.id,
+        title: EDBmovement.name,
+        targets: [EDBmovement.target],
+        bodyPart: EDBmovement.bodyPart,
+        equipment: [EDBmovement.equipment],
+        image: EDBmovement.gifUrl,
+        source: "https://rapidapi.com/justin-WFnsXH_t6/api/exercisedb/",
+      });
+      newMovement.save();
+      return;
+    };
+    const promises = EDBmovements.map(async (EDBmovement) => {
+      if (!movementCollectionExists) {
+        saveNewMovement(EDBmovement);
+        return;
+      }
+      const movementDocumentExists = await Movement.findOne({ EDB: EDBmovement.id });
+      if (!movementDocumentExists) {
+        saveNewMovement(EDBmovement);
+        return;
+      }
+    });
+    Promise.all(
+      promises
+    );
+  })
+  .then(() => Movement.find())
+  .then((foundMovements) => console.log(`movement documents: `, foundMovements.length))
   .catch((error) => console.log(error.message));
 
 mongoose.set("useFindAndModify", false);

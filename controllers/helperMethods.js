@@ -39,8 +39,7 @@ export async function validateMovementId(movementId) {
     try {
       const movement = await Movement.findById(movementId);
       if (movement) {
-        console.log("movement found:");
-        console.dir(movement);
+        console.log(`movement found: ${movement._id}`);
         return movement;
       }
     } catch (error) {
