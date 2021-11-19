@@ -8,10 +8,10 @@ import { EDBmovements } from "../index.js";
 import Performance from "../models/performance.model.js";
 import Session from "../models/session.model.js";
 import Plan from "../models/plan.model.js";
-import Movement from '../models/movement.model.js';
+import Movement from "../models/movement.model.js";
 // helper methods
 
-import { authenticateRequest, validateMovementId } from './helperMethods.js';
+import { authenticateRequest, validateMovementId } from "./helperMethods.js";
 
 export const createSession = async (req, res) => {
   try {
@@ -25,37 +25,42 @@ export const createSession = async (req, res) => {
 };
 
 export const createSingleMovementSession = async (req, res) => {
-  console.log('controller createSingleMovementSession invoked');
+  console.log("controller createSingleMovementSession invoked");
   try {
     await authenticateRequest(req);
-    console.log('request authenticated');
+    console.log("request authenticated");
     const movement = await validateMovementId(req.params.movementId);
-    console.log('movement validated');
-    console.log('movement:')
+    console.log("movement validated");
+    console.log("movement:");
     console.dir(movement);
     const planData = {
       title: movement?.name || movement?.title,
       creator: req.userId,
-      description: `A workout consisting of a single movement: ${movement?.name || movement?.title}.`,
+      description: `A workout consisting of a single movement: ${
+        movement?.name || movement?.title
+      }.`,
       image: movement?.gifUrl || movement?.image,
       exercises: [
         {
-          EDBmovement: req.params.movementId.length === 4 ? req.params.movementId : undefined,
-          movement: mongoose.Types.ObjectId.isValid(req.params.movementId) ? req.params.movementId : undefined,
+          EDBmovement:
+            req.params.movementId.length === 4
+              ? req.params.movementId
+              : undefined,
+          movement: mongoose.Types.ObjectId.isValid(req.params.movementId)
+            ? req.params.movementId
+            : undefined,
           index: 0,
         },
       ],
-      equipment: [
-        movement?.equipment,
-      ],
+      equipment: [movement?.equipment],
     };
-    console.log('planData:')
+    console.log("planData:");
     console.dir(planData);
     const singleMovementPlan = new Plan(planData);
-    console.log('singleMovementPlan:')
+    console.log("singleMovementPlan:");
     console.dir(singleMovementPlan);
     await singleMovementPlan.save();
-    console.log('plan saved');
+    console.log("plan saved");
     const sessionData = {
       plan: singleMovementPlan._id,
       creator: req.userId,
@@ -64,7 +69,7 @@ export const createSingleMovementSession = async (req, res) => {
     };
     const singleMovementSession = new Session(sessionData);
     await singleMovementSession.save();
-    console.log('session saved');
+    console.log("session saved");
     res.status(201).json(singleMovementSession);
   } catch (error) {
     res.status(409).json({ message: error.message });
@@ -99,10 +104,7 @@ export const getSession = async (req, res) => {
         populate: {
           path: "exercises",
           populate: {
-            path: "exercise",
-            populate: {
-              path: "movement",
-            },
+            path: "movement",
           },
         },
       })
@@ -142,24 +144,25 @@ export const getSession = async (req, res) => {
 
 const validateUserId = (userId) => {
   // validate userId
-  if (!userId) return res.status(403).json({ message: "Unauthenticated"});
-  if (!mongoose.Types.ObjectId.isValid(userId)) return res.status(403).json({ message: "Invalid userId"});
+  if (!userId) return res.status(403).json({ message: "Unauthenticated" });
+  if (!mongoose.Types.ObjectId.isValid(userId))
+    return res.status(403).json({ message: "Invalid userId" });
   console.log(`userId ${userId} is valid`);
 };
 
 export const getSessionsByPlanAndUser = async (req, res) => {
-
   console.log(`session.js controller getSessionsByPlanAndUser invoked.`);
-  
-  if (!req.userId) return res.status(403).json({ message: "Unauthenticated"});
-  
+
+  if (!req.userId) return res.status(403).json({ message: "Unauthenticated" });
+
   const { userId, planId } = req.params;
   // console.log(`userId: ${userId}, planId: ${planId}`);
-  
+
   // validate userId
 
-  if (!mongoose.Types.ObjectId.isValid(userId)) return res.status(403).json({ message: "Invalid userId"});
-  
+  if (!mongoose.Types.ObjectId.isValid(userId))
+    return res.status(403).json({ message: "Invalid userId" });
+
   try {
     const sessions = await Session.find({
       $and: [
@@ -182,8 +185,8 @@ export const getSessionsByPlanAndUser = async (req, res) => {
       .populate("invitees")
       .sort("startTime");
 
-      console.log(`sessions.length: ${sessions.length}`);
-      
+    console.log(`sessions.length: ${sessions.length}`);
+
     res.status(200).json(sessions);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -191,11 +194,10 @@ export const getSessionsByPlanAndUser = async (req, res) => {
 };
 
 export const getRecentSessions = async (req, res) => {
-
   console.log(`session.js controller getRecentSessions invoked`);
-  
+
   const { userId, planId } = req.params;
-  
+
   validateUserId(userId);
 
   try {
@@ -218,11 +220,11 @@ export const getRecentSessions = async (req, res) => {
       .populate("leader")
       .populate("attendees")
       .populate("invitees")
-      .sort({ startTime: 'descending' })
+      .sort({ startTime: "descending" })
       .limit(3);
 
-      console.log(`sessions.length: ${sessions.length}`);
-      
+    console.log(`sessions.length: ${sessions.length}`);
+
     res.status(200).json(sessions);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -246,13 +248,13 @@ export const getPreviousSessions = async (req, res) => {
         {
           startTime: { $lt: moment().subtract(1, "hours") },
         },
-      ]
+      ],
     })
-    .populate("plan")
-    .populate("leader")
-    .populate("attendees")
-    .populate("invitees")
-    .sort("startTime");
+      .populate("plan")
+      .populate("leader")
+      .populate("attendees")
+      .populate("invitees")
+      .sort("startTime");
     res.status(200).json(previousSessions);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -278,7 +280,7 @@ export const getUpcomingSessions = async (req, res) => {
           startTime: { $gte: moment().subtract(1, "hours") },
         },
         {
-          isSingleMovementSession: false
+          isSingleMovementSession: false,
         },
       ],
     })
