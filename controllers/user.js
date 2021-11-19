@@ -222,7 +222,18 @@ export const getUser = async (req, res) => {
 
   try {
     const user = await User.findById(userId);
-    res.status(200).json(user);
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(404).json({ message: error.message });
+  }
+};
+
+export const suggestConnections = async (req, res) => {
+  try {
+    const users = await User.find({
+      _id: { $ne: req.userId }
+    });
+    res.status(200).json(users);
   } catch (error) {
     res.status(404).json({ message: error.message });
   }

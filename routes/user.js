@@ -7,6 +7,7 @@ import {
     googleSignin,
     getUsers,
     getUser,
+    suggestConnections,
 } from '../controllers/user.js';
 
 import auth from '../middleware/auth.js';
@@ -17,6 +18,7 @@ router.post('/', createUser);
 router.post('/signup', signup);
 router.post('/signin', signin);
 router.post('/googleSignin', googleSignin);
+router.get('/suggestions', auth, suggestConnections);
 router.get('/', auth, getUsers);
 router.get('/:userId', auth, getUser);
 

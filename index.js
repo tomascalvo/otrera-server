@@ -16,6 +16,7 @@ import planRoutes from "./routes/plan.js";
 import sessionRoutes from "./routes/session.js";
 import performanceRoutes from "./routes/performance.js";
 import goalRoutes from "./routes/goal.js";
+import dyadRoutes from './routes/dyad.js';
 
 // models
 
@@ -44,6 +45,7 @@ server.use("/plans", planRoutes);
 server.use("/sessions", sessionRoutes);
 server.use("/performances", performanceRoutes);
 server.use("/goals", goalRoutes);
+server.use('/dyads', dyadRoutes);
 
 // .env
 
