@@ -243,7 +243,21 @@ export const getPreviousSessions = async (req, res) => {
           ],
         },
         {
-          startTime: { $lt: moment().subtract(1, "hours") },
+          $or: [
+            {
+              startTime: { $lt: moment().subtract(1, "hours") },
+            },
+            {
+              $and: [
+                {
+                  startTime: { $lt: moment() },
+                },
+                {
+                  completed: undefined,
+                },
+              ],
+            },
+          ],
         },
       ],
     })
@@ -252,6 +266,7 @@ export const getPreviousSessions = async (req, res) => {
       .populate("attendees")
       .populate("invitees")
       .sort("startTime");
+    console.log(`sending ${previousSessions.length} previous sessions`);
     res.status(200).json(previousSessions);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -308,6 +323,7 @@ export const getUpcomingSessions = async (req, res) => {
       });
     });
 
+    console.log(`sending ${incompleteSessions.length} upcoming sessions`);
     res.status(200).json(incompleteSessions);
   } catch (error) {
     res.status(404).json({ message: error.message });
