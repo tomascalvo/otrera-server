@@ -15,16 +15,16 @@ const performanceSchema = mongoose.Schema(
     attempts: [
       {
         _id: false,
-        EDBmovement: String,
         movement: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Movement",
+          required: [true, 'A performance.attempt must have a movement property.'],
         },
         sets: [
           {
             _id: false,
             resistance: Number,
-            reps: { type: Number, required: true },
+            reps: { type: Number, required: true, default: 0 },
             attempted: {
               type: Date,
               required: [

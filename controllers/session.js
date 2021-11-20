@@ -30,11 +30,11 @@ export const createSingleMovementSession = async (req, res) => {
     await authenticateRequest(req);
     console.log("request authenticated");
     const movement = await validateMovementId(req.params.movementId);
-    console.log("movement validated");
-    console.log("movement:");
-    console.dir(movement);
+    // console.log("movement validated");
+    // console.log("movement:");
+    // console.dir(movement);
     const planData = {
-      title: movement?.name || movement?.title,
+      title: movement?.title,
       creator: req.userId,
       description: `A workout consisting of a single movement: ${
         movement?.name || movement?.title
@@ -42,17 +42,14 @@ export const createSingleMovementSession = async (req, res) => {
       image: movement?.gifUrl || movement?.image,
       exercises: [
         {
-          EDBmovement:
-            req.params.movementId.length === 4
-              ? req.params.movementId
-              : undefined,
-          movement: mongoose.Types.ObjectId.isValid(req.params.movementId)
-            ? req.params.movementId
-            : undefined,
+          movement: movement._id,
           index: 0,
+          reps: movement?.reps?.recommended,
+          sets: movement?.sets?.recommended,
+          resistance: movement?.resistance?.recommended,
         },
       ],
-      equipment: [movement?.equipment],
+      equipment: movement?.equipment,
     };
     console.log("planData:");
     console.dir(planData);

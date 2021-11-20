@@ -8,30 +8,18 @@ const goalSchema = mongoose.Schema(
     movement: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Movement",
-    },
-    EDBmovement: {
-      type: String,
-      minLength: [
-        4,
-        "EDB movement id too short: must be 4 characters in length",
-      ],
-      maxLength: [
-        4,
-        "EDB movement id too long: must be 4 characters in length",
-      ],
+      required: [true, 'A goal must have a movement.'],
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, 'A goal must have a user'],
+      required: [true, 'A goal must have a user.'],
     },
-    resistance: {
-      type: Number,
-      default: 0,
-    },
+    resistance: Number,
     reps: {
       type: Number,
       default: 1,
+      required: [true, 'A goal must have at least one rep.'],
     },
     sets: Number,
     start: {

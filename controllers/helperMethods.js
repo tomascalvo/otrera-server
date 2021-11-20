@@ -12,7 +12,7 @@ export function validateObjectId(id) {
 }
 
 export async function authenticateRequest(req) {
-  console.log('helper method authenticateRequest invoked');
+  console.log("helper method authenticateRequest invoked");
   const userId = req?.userId;
   console.log(`userId: ${userId}`);
   if (!userId)
@@ -35,28 +35,15 @@ export async function validateMovementId(movementId) {
   console.log(
     `validateMovementId helper method invoked for movementId ${movementId}`
   );
-  if (movementId.length > 4) {
-    validateObjectId(movementId);
-    try {
-      const movement = await Movement.findById(movementId);
-      if (movement) {
-        console.log(`movement found: ${movement._id}`);
-        return movement;
-      }
-    } catch (error) {
-      console.log(error);
+  validateObjectId(movementId);
+  try {
+    const movement = await Movement.findById(movementId);
+    if (movement) {
+      console.log(`movement found: ${movement._id}`);
+      return movement;
     }
-  } else {
-    const EDBmovement = EDBmovements.find((EDBmovement) => {
-      return EDBmovement.id === movementId;
-    });
-    if (EDBmovement) {
-      console.log("EDBmovement found");
-      return EDBmovement;
-    } else {
-      console.log(`No movement or EDBmovement with id ${movementId} exists.`);
-      return null;
-    }
+  } catch (error) {
+    console.log(error);
   }
 }
 

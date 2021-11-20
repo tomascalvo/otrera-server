@@ -5,6 +5,7 @@ import Goal from "../models/goal.model.js";
 import Performance from "../models/performance.model.js";
 
 import { EDBmovements } from "../index.js";
+import { authenticateRequest, validateUserId } from "./helperMethods.js";
 
 export const createGoal = async (req, res) => {
   console.log("createGoal controller called");
@@ -19,9 +20,6 @@ export const createGoal = async (req, res) => {
   const goalData = {
     ...req.body,
     user: req.userId,
-    movement: req.body?.movement?.length > 4 ? req.body?.movement : undefined,
-    EDBmovement:
-      req.body?.movement?.length === 4 ? req.body?.movement : undefined,
   };
   console.log("goalData:");
   console.dir(goalData);
@@ -63,7 +61,7 @@ export const getProgress = async (req, res) => {
   // goal.sets is an array of objects.
   // Each set is an object:
   // {
-  //   EDBmovement,
+  //   movement,
   //   resistance,
   //   reps,
   //   set,
@@ -73,94 +71,54 @@ export const getProgress = async (req, res) => {
 
   console.log("getProgress controller called");
 
-  // validate userId, targetId
-
-  if (!req.userId) return res.status(403).json({ message: "Unauthenticated" });
-
-  const userId = req.userId;
-  const targetId = req.params.userId !== "me" ? req.params.userId : userId;
-
-  console.log(`targetId: ${targetId}`);
-  
   try {
-    // get an array of all target user goals
+    // validate userId, targetId
+    authenticateRequest(req);
+    const userId = req.userId;
+    const targetId = req.params.userId !== "me" ? req.params.userId : userId;
+    validateUserId(targetId);
+    console.log(`targetId: ${targetId}`);
 
+    // get an array of all target user goals
     const goals = await Goal.find({ user: targetId })
       .populate("movement")
       .lean();
 
     // if user has no goals, return an empty array
-
     if (goals === []) {
       res.status(200).json([]);
     }
-
     console.log(`User ${targetId} has ${goals.length} goals`);
 
-    // populate goal.EDBmovement property
-
-    const populatedGoals = goals.map((goal) => {
-      return {
-        ...goal,
-        EDBmovement: goal?.EDBmovement
-          ? EDBmovements.find((el) => {
-              return el.id === goal?.EDBmovement;
-            })
-          : undefined,
-      };
-    });
-
+    // get performances of the goal's movement by the current user
     const progress = [];
-
     await Promise.all(
-      populatedGoals.map(async (goal) => {
+      goals.map(async (goal) => {
         console.log(`Querying performances for goal ${goal.title}`);
-
-        // const onePerformance = await Performance.findOne({ user: targetId });
-
-        // if (onePerformance === null) {
-        //   progress.push({
-        //     ...goal,
-        //     sets: [],
-        //   })
-        //   return;
-        // }
-
         // get all performances of the movement of the goal, filtered by resistance/reps/sets parameters
         const performances = await Performance.find({
           $and: [
             { user: targetId },
             {
-              $or: [
-                // {
-                //   "attempts.movement": {
-                //     $exists: true,
-                //     $ne: undefined,
-                //     $eq: goal?.movement._id,
-                //   },
-                // },
-                {
-                  "attempts.EDBmovement": {
-                    $exists: true,
-                    $ne: undefined,
-                    $eq: goal?.EDBmovement.id,
-                  },
-                },
-              ],
+              "attempts.movement": {
+                $exists: true,
+                $ne: undefined,
+                $eq: goal?.movement._id,
+              },
             },
           ],
         })
           .sort("completed")
-          .limit(100)
+          // .limit(100)
           .lean();
-
-        // if goal has no performances, push an empty array and return
 
         console.log(
           `${goal.title} performances.length: ${performances.length}`
         );
 
-        if (performances === []) {
+        // if goal has no performances, push an empty array and return
+        if (performances.length === 0) {
+          console.log(`Goal ${goal.title} has no performances.`);
           progress.push({
             ...goal,
             sets: [],
@@ -168,20 +126,17 @@ export const getProgress = async (req, res) => {
           return;
         }
 
-        // filter out performance attempts that don't match the goal movement or goal EDB movement
-
+        // filter out performance attempts that don't match the goal movement
+        console.log(`filtering out attempts that don\'t match the goal movement: ${goal.movement._id}`);
         const performancesWithFilteredAttempts = [
           ...performances.map((performance) => {
             return {
               ...performance,
               attempts: performance.attempts.filter((attempt) => {
-                // console.log("attempt?.movement", attempt?.movement);
-                console.log("attempt?.EDBmovement", attempt?.EDBmovement);
-
-                return (
-                  (attempt?.movement === goal?.movement?._id && goal?.movement?._id !== undefined) ||
-                  (attempt?.EDBmovement === goal?.EDBmovement?.id && goal?.EDBmovement?.id !== undefined)
-                );
+                const isMatch = attempt?.movement.equals(goal?.movement?._id) &&
+                goal?.movement?._id !== undefined;
+                console.log(`goal.movement: ${goal.movement}, attempt?.movement: ${attempt?.movement}, isMatch: ${isMatch}`);
+                return isMatch;
               }),
             };
           }),
@@ -191,14 +146,17 @@ export const getProgress = async (req, res) => {
           `${goal.title} performancesWithFilteredAttempts.length: ${performancesWithFilteredAttempts.length}`
         );
 
-        console.log(
-          `${goal.title} attempts:`
+        console.log(`performancesWithFilteredAttempts:`);
+          console.dir(performancesWithFilteredAttempts);
+
+        console.log(`${goal.title} attempts:`);
+        console.dir(
+          performancesWithFilteredAttempts
+            .map((el) => {
+              return el.attempts;
+            })
+            .flat()
         );
-        console.dir(performancesWithFilteredAttempts
-          .map((el) => {
-            return el.attempts;
-          })
-          .flat());
 
         // populate EDBmovement data into attempts
 
@@ -240,7 +198,7 @@ export const getProgress = async (req, res) => {
     );
     res.status(200).json(progress);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

@@ -31,7 +31,11 @@ const movementSchema = mongoose.Schema(
       max: Number,
       recommended: Number,
     },
-    resistance: Number,
+    resistance: {
+      min: Number,
+      max: Number,
+      recommended: Number,
+    },
     source: { type: String, default: "original" },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
