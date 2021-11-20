@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 import { authenticateRequest, validateMovementId } from "./helperMethods.js";
+import ConnectionRequest from "../models/connectionRequest.model.js";
+import Dyad from "../models/dyad.model.js";
 
 export const createUser = async (req, res) => {
   const userData = req.body;
@@ -230,9 +232,23 @@ export const getUser = async (req, res) => {
 
 export const suggestConnections = async (req, res) => {
   try {
-    const users = await User.find({
-      _id: { $ne: req.userId }
+    authenticateRequest(req);
+    const { userId } = req;
+    const currentConnections = await Dyad.find({
+        monad: { user: userId },
+    }).map((dyad) => {
+      return dyad.monads.findOne((monad) => {
+        return monad.user !== userId;
+      }).user;
     });
+    const declinedRecipients = await ConnectionRequest.find({
+      sender: req.userId,
+      status: { $in: ['declined']},
+    }).map((request) => request.recipient);
+    const users = await User.find({
+      _id: { $ne: userId },
+      _id: { $nin: declinedRecipients },
+    }).limit(8);
     res.status(200).json(users);
   } catch (error) {
     res.status(404).json({ message: error.message });

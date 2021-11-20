@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import Dyad from "../models/dyad.model.js";
+import { authenticateRequest, validateObjectId } from "./helperMethods.js";
 
 export const createDyad = async (req, res) => {
   console.log(
@@ -58,3 +59,20 @@ export const getDyads = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deleteDyad = async (req, res) => {
+  console.log('deleteDyad controller invoked');
+  try {
+    await authenticateRequest(req);
+    const {dyadId} = req.params;
+    validateObjectId(dyadId);
+    const deletedDyad = await Dyad.findByIdAndDelete(dyadId);
+    if (!deletedDyad) {
+      return res.status(404).json({ message: error.message });
+    } else {
+      return res.status(202).json(deletedDyad);
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}

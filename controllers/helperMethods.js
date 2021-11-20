@@ -14,6 +14,7 @@ export function validateObjectId(id) {
 export async function authenticateRequest(req) {
   console.log('helper method authenticateRequest invoked');
   const userId = req?.userId;
+  console.log(`userId: ${userId}`);
   if (!userId)
     return res
       .status(401)
@@ -56,5 +57,21 @@ export async function validateMovementId(movementId) {
       console.log(`No movement or EDBmovement with id ${movementId} exists.`);
       return null;
     }
+  }
+}
+
+export async function validateUserId(userId) {
+  try {
+    validateObjectId(userId);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: `No user exists with id ${userId}.` });
+    } else {
+      return user;
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 }
