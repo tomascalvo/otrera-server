@@ -9,6 +9,8 @@ import {
     getRecentSessions,
     getPreviousSessions,
     getUpcomingSessions,
+    inviteUser,
+    deleteSession,
 } from '../controllers/session.js';
 
 import auth from '../middleware/auth.js';
@@ -25,5 +27,7 @@ router.get(`/recent/plan/:planId/user/:userId`, auth, getRecentSessions,
 );
 router.get(`/user/:userId/previous`, auth, getPreviousSessions);
 router.get(`/user/:userId/upcoming`, auth, getUpcomingSessions);
+router.patch(`/session/:sessionId/invite/:userId`, auth, inviteUser);
+router.delete(`/:sessionId`, auth, deleteSession);
 
 export default router;

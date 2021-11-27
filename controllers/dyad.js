@@ -47,13 +47,17 @@ export const getDyads = async (req, res) => {
   try {
     const collectionExists = await Dyad.findOne();
     if (!collectionExists) {
-      res.status(404).json({ message: error.message });
+      console.log('!collectionExists');
+      return res.status(404).json({ message: "No dyad collection exists in db." });
     }
+    console.log('collectionExists');
     const dyads = await Dyad.find(
-      // {
-      //   monad: { user: userId },
-      // }
+      {
+        monad: { user: userId },
+      }
     ).populate("monads.user");
+    console.log('dyads:');
+    console.dir(dyads);
     res.status(200).send(dyads);
   } catch (error) {
     res.status(500).json({ message: error.message });

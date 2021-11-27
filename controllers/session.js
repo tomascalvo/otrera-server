@@ -11,7 +11,11 @@ import Plan from "../models/plan.model.js";
 import Movement from "../models/movement.model.js";
 // helper methods
 
-import { authenticateRequest, validateMovementId } from "./helperMethods.js";
+import {
+  authenticateRequest,
+  validateMovementId,
+  validateObjectId,
+} from "./helperMethods.js";
 
 export const createSession = async (req, res) => {
   try {
@@ -86,16 +90,16 @@ export const getSessions = async (req, res) => {
 };
 
 export const getSession = async (req, res) => {
-  const { id: _id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  const { id: sessionId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(sessionId)) {
     return res
       .status(404)
       .send(
-        `${_id} is not a valid Mongoose ObjectId Cannot fetch session by this id.`
+        `${sessionId} is not a valid Mongoose ObjectId Cannot fetch session by this id.`
       );
   }
   try {
-    const session = await Session.findById(_id)
+    const session = await Session.findById(sessionId)
       .populate({
         path: "plan",
         populate: {
@@ -111,29 +115,13 @@ export const getSession = async (req, res) => {
       .populate("attendees")
       .lean();
 
-    const populateEDB = {
-      ...session,
-      plan: {
-        ...session.plan,
-        exercises: session.plan.exercises.map((exercise) => ({
-          ...exercise,
-          EDBmovement:
-            EDBmovements.find((EDBm) => {
-              return EDBm.id === exercise?.EDBmovement;
-            }) || exercise?.EDBmovement,
-        })),
-      },
-    };
-    // console.log(`populateEDB:`);
-    // console.dir({
-    //   ...populateEDB,
-    //   plan: { ...populateEDB.plan, image: "image" },
-    //   creator: {
-    //     ...populateEDB.creator,
-    //     image: "image",
-    //   },
-    // });
-    res.status(200).json(populateEDB);
+    const performances = await Performance.find({
+      session: sessionId,
+    }).populate({
+      path: "user",
+    });
+
+    res.status(200).json({ ...session, performances });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
@@ -327,5 +315,54 @@ export const getUpcomingSessions = async (req, res) => {
     res.status(200).json(incompleteSessions);
   } catch (error) {
     res.status(404).json({ message: error.message });
+  }
+};
+
+export const inviteUser = async (req, res) => {
+  try {
+    authenticateRequest(res);
+    const { sessionId, userId: inviteeId } = req.params;
+    validateObjectId(sessionId);
+    validateUserId(inviteeId);
+    const sessionExists = await Session.findById({ _id: id });
+    if (!sessionExists) {
+      return res
+        .status(404)
+        .json({ message: `No session exists with id ${sessionId}.` });
+    }
+    if (sessionExists.invitees.includes(inviteeId)) {
+      return res
+        .status(409)
+        .json({
+          message: `User ${inviteeId} is already invited to session ${sessionId}.`,
+        });
+    }
+    const updatedSession = await Session.findByIdAndUpdate(
+      { _id: id },
+      { $push: { invitees: { inviteeId } } },
+      { new: true }
+    );
+    return res.status(200).json(updatedSession);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteSession = async (req, res) => {
+  console.log(
+    `deleteSession controller invoked for sessionId ${req.params.sessionId}`
+  );
+  try {
+    await authenticateRequest(req);
+    const { sessionId } = req.params;
+    await validateObjectId(sessionId);
+    const deletion = await Session.findByIdAndDelete(sessionId);
+    const performances = await Performance.deleteMany({
+      session: sessionId,
+    });
+    console.log(`performances.deletedCount: ${performances.deletedCount}`);
+    return res.status(200).json(deletion);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
