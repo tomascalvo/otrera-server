@@ -10,6 +10,7 @@ import {
     getPreviousSessions,
     getUpcomingSessions,
     inviteUser,
+    declineInvitation,
     deleteSession,
 } from '../controllers/session.js';
 
@@ -27,7 +28,8 @@ router.get(`/recent/plan/:planId/user/:userId`, auth, getRecentSessions,
 );
 router.get(`/user/:userId/previous`, auth, getPreviousSessions);
 router.get(`/user/:userId/upcoming`, auth, getUpcomingSessions);
-router.patch(`/session/:sessionId/invite/:userId`, auth, inviteUser);
+router.patch(`/:sessionId/invite/:userId`, auth, inviteUser);
+router.patch(`/:sessionId/decline`, auth, declineInvitation);
 router.delete(`/:sessionId`, auth, deleteSession);
 
 export default router;

@@ -319,12 +319,13 @@ export const getUpcomingSessions = async (req, res) => {
 };
 
 export const inviteUser = async (req, res) => {
+  console.log('inviteUser controller invoked');
   try {
-    authenticateRequest(res);
+    authenticateRequest(req);
     const { sessionId, userId: inviteeId } = req.params;
     validateObjectId(sessionId);
     validateUserId(inviteeId);
-    const sessionExists = await Session.findById({ _id: id });
+    const sessionExists = await Session.findById(sessionId);
     if (!sessionExists) {
       return res
         .status(404)
@@ -338,8 +339,8 @@ export const inviteUser = async (req, res) => {
         });
     }
     const updatedSession = await Session.findByIdAndUpdate(
-      { _id: id },
-      { $push: { invitees: { inviteeId } } },
+      { _id: sessionExists._id },
+      { $push: { invitees: { _id: inviteeId } } },
       { new: true }
     );
     return res.status(200).json(updatedSession);
@@ -347,6 +348,51 @@ export const inviteUser = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const declineInvitation = async (req, res) => {
+  console.log('declineInvitation controller invoked');
+  try {
+
+    // data validation
+
+    await authenticateRequest(req);
+    const { userId } = req;
+    await validateUserId(req.userId);
+    const { sessionId } = req.params;
+    await validateObjectId(sessionId);
+    const sessionExists = await Session.findById(sessionId).lean();
+    // console.log("sessionExists:");
+    // console.dir(sessionExists);
+    if (!sessionExists) {
+      return res
+        .status(404)
+        .json({ message: `No session exists with id ${sessionId}.` });
+    }
+    if (!sessionExists.invitees.some((el) => {
+      console.log(`el.equals(userId): ${el.equals(userId)}`);
+      return el.equals(userId);
+    })) {
+      return res
+        .status(409)
+        .json({
+          message: `User ${userId} is not invited to session ${sessionId}.`,
+        });
+    }
+
+    // update
+
+    const updatedSession = await Session.findByIdAndUpdate(
+      sessionExists._id,
+      { $pull: { 'invitees': userId } },
+      { new: true }
+      );
+      console.log("updatedSession:");
+      console.dir(updatedSession);
+    return res.status(200).json(updatedSession);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
 
 export const deleteSession = async (req, res) => {
   console.log(
