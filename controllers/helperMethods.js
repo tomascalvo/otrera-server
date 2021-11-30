@@ -7,14 +7,15 @@ export function validateObjectId(id) {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).send(`${id} is not a valid mongoose ObjectId.`);
   } else {
-    console.log(`ObjectId passes validation: ${id}`);
+    // console.log(`ObjectId passes validation: ${id}`);
+    return id;
   }
 }
 
 export async function authenticateRequest(req) {
-  console.log("helper method authenticateRequest invoked");
+  // console.log("helper method authenticateRequest invoked");
   const userId = req?.userId;
-  console.log(`userId: ${userId}`);
+  // console.log(`userId: ${userId}`);
   if (!userId)
     return res
       .status(401)
@@ -26,20 +27,20 @@ export async function authenticateRequest(req) {
       .status(401)
       .json({ message: `Unauthenticated: no user exists with id ${userId}.` });
   } else {
-    console.log("user authenticated: ", req.userId, typeof req.userId);
+    // console.log("user authenticated: ", req.userId, typeof req.userId);
     return user;
   }
 }
 
 export async function validateMovementId(movementId) {
   console.log(
-    `validateMovementId helper method invoked for movementId ${movementId}`
+    // `validateMovementId helper method invoked for movementId ${movementId}`
   );
   validateObjectId(movementId);
   try {
     const movement = await Movement.findById(movementId);
     if (movement) {
-      console.log(`movement found: ${movement._id}`);
+      // console.log(`movement found: ${movement._id}`);
       return movement;
     }
   } catch (error) {

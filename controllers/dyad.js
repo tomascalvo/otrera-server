@@ -10,10 +10,6 @@ export const createDyad = async (req, res) => {
   const { userId } = req;
   const { otherId } = req.params;
   try {
-    // const dyadExists = await Dyad.findOne({
-    //   monads: { $in: [{ user: userId }] },
-    //   monads: { $in: [{ user: otherId }] },
-    // });
     const dyadExists = await Dyad.findOne({
       'monads.user': { $in: [userId, otherId] },
     });
@@ -42,22 +38,20 @@ export const createDyad = async (req, res) => {
 };
 
 export const getDyads = async (req, res) => {
-  console.log('getDyads controller invoked');
-  const { userId } = req;
+  // console.log('getDyads controller invoked');
   try {
+    const { _id: userId } = await authenticateRequest(req);
     const collectionExists = await Dyad.findOne();
     if (!collectionExists) {
-      console.log('!collectionExists');
+      console.log("No dyad collection exists in db.");
       return res.status(404).json({ message: "No dyad collection exists in db." });
     }
-    console.log('collectionExists');
+    console.log(`userId: ${userId}`);
     const dyads = await Dyad.find(
       {
-        monad: { user: userId },
+        monads: { user: userId },
       }
     ).populate("monads.user");
-    console.log('dyads:');
-    console.dir(dyads);
     res.status(200).send(dyads);
   } catch (error) {
     res.status(500).json({ message: error.message });

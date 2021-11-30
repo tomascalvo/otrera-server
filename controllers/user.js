@@ -231,51 +231,49 @@ export const getUser = async (req, res) => {
 };
 
 export const suggestConnections = async (req, res) => {
-  // console.log('suggestConnections controller invoked');
+  // a list of users that are not the current user, not connected to the current user, didn't decline or accept a request from the user
+
+  console.log("suggestConnections controller invoked");
   try {
-    await authenticateRequest(req);
-    const { userId } = req;
+    const { _id: userId } = await authenticateRequest(req);
     const currentConnections = await Dyad.find({
-        monad: { user: userId },
-    });
-    // console.log('currentConnections:');
-    // console.dir(currentConnections);
+      monads: { user: userId },
+    }).lean();
     const currentConnectionsIds = currentConnections.map((dyad) => {
-        return dyad.monads.findOne((monad) => {
-          return monad.user !== userId;
-        }).user;
+      const otherMonad = dyad.monads.find((monad) => {
+        return !monad.user.equals(userId);
       });
-    // console.log('currentConnectionsIds:');
-    // console.dir(currentConnectionsIds);
+      const otherUser = otherMonad.user;
+      return otherUser;
+    });
     const declinedRecipients = await ConnectionRequest.find({
       sender: req.userId,
-      status: { $in: ['declined']},
+      status: { $in: ["declined"] },
     });
-    // console.log('declinedRecipients:');
-    // console.dir(declinedRecipients);
-    const declinedRecipientsIds = declinedRecipients.map((request) => request.recipient);
-    // console.log('declinedRecipientsIds:');
-    // console.dir(declinedRecipientsIds);
+    const declinedRecipientsIds = declinedRecipients.map(
+      (request) => request.recipient
+    );
     const suggestedUsers = await User.find({
-      _id: { $nin: [userId, ...declinedRecipientsIds, ...currentConnectionsIds] },
+      _id: {
+        $nin: [userId, ...declinedRecipientsIds, ...currentConnectionsIds],
+      },
     }).limit(8);
     const suggestedUsersIds = suggestedUsers.map((suggestedUser) => {
       return suggestedUser._id;
     });
     const pendingSuggestions = await ConnectionRequest.find({
       recipient: { $in: suggestedUsersIds },
-      status: 'pending',
+      status: "pending",
     });
     const suggestions = suggestedUsers.map((suggestedUser) => {
       return {
         suggestedUser,
         requestStatus: pendingSuggestions.some((pendingSuggestion) => {
-          // console.log(`pendingSuggestion.recipient: ${pendingSuggestion.recipient}`);
-          // console.log(`suggestedUser._id: ${suggestedUser._id}`);
-          // console.log(`equality: ${pendingSuggestion.recipient.equals(suggestedUser._id)}`)
           return pendingSuggestion.recipient.equals(suggestedUser._id);
-        }) ? "pending" : undefined,
-      }
+        })
+          ? "pending"
+          : undefined,
+      };
     });
     res.status(200).json(suggestions);
   } catch (error) {
