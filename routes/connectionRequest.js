@@ -2,7 +2,8 @@ import express from 'express';
 
 import {
   createConnectionRequest,
-  deleteConnectionRequest
+  getInbox,
+  deleteConnectionRequest,
 } from '../controllers/connectionRequest.js';
 
 import auth from '../middleware/auth.js';
@@ -10,6 +11,7 @@ import auth from '../middleware/auth.js';
 const router = express.Router();
 
 router.post('/:recipientId', auth, createConnectionRequest);
+router.get('/inbox', auth, getInbox);
 router.delete('/:recipientId', auth, deleteConnectionRequest);
 
 export default router;

@@ -231,26 +231,54 @@ export const getUser = async (req, res) => {
 };
 
 export const suggestConnections = async (req, res) => {
+  // console.log('suggestConnections controller invoked');
   try {
-    authenticateRequest(req);
+    await authenticateRequest(req);
     const { userId } = req;
     const currentConnections = await Dyad.find({
         monad: { user: userId },
-    }).map((dyad) => {
-      return dyad.monads.findOne((monad) => {
-        return monad.user !== userId;
-      }).user;
     });
+    // console.log('currentConnections:');
+    // console.dir(currentConnections);
+    const currentConnectionsIds = currentConnections.map((dyad) => {
+        return dyad.monads.findOne((monad) => {
+          return monad.user !== userId;
+        }).user;
+      });
+    // console.log('currentConnectionsIds:');
+    // console.dir(currentConnectionsIds);
     const declinedRecipients = await ConnectionRequest.find({
       sender: req.userId,
       status: { $in: ['declined']},
-    }).map((request) => request.recipient);
-    const users = await User.find({
-      _id: { $ne: userId },
-      _id: { $nin: declinedRecipients },
+    });
+    // console.log('declinedRecipients:');
+    // console.dir(declinedRecipients);
+    const declinedRecipientsIds = declinedRecipients.map((request) => request.recipient);
+    // console.log('declinedRecipientsIds:');
+    // console.dir(declinedRecipientsIds);
+    const suggestedUsers = await User.find({
+      _id: { $nin: [userId, ...declinedRecipientsIds, ...currentConnectionsIds] },
     }).limit(8);
-    res.status(200).json(users);
+    const suggestedUsersIds = suggestedUsers.map((suggestedUser) => {
+      return suggestedUser._id;
+    });
+    const pendingSuggestions = await ConnectionRequest.find({
+      recipient: { $in: suggestedUsersIds },
+      status: 'pending',
+    });
+    const suggestions = suggestedUsers.map((suggestedUser) => {
+      return {
+        suggestedUser,
+        requestStatus: pendingSuggestions.some((pendingSuggestion) => {
+          // console.log(`pendingSuggestion.recipient: ${pendingSuggestion.recipient}`);
+          // console.log(`suggestedUser._id: ${suggestedUser._id}`);
+          // console.log(`equality: ${pendingSuggestion.recipient.equals(suggestedUser._id)}`)
+          return pendingSuggestion.recipient.equals(suggestedUser._id);
+        }) ? "pending" : undefined,
+      }
+    });
+    res.status(200).json(suggestions);
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };

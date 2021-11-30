@@ -6,9 +6,9 @@ import { authenticateRequest, validateUserId, validateObjectId } from "./helperM
 export const createConnectionRequest = async (req, res) => {
   console.log('createConnectionRequest invoked');
   try {
+    await authenticateRequest(req);
     const { userId } = req;
     const { recipientId } = req.params;
-    await authenticateRequest(req);
     await validateUserId(recipientId);
     console.log('validation step complete');
     const newConnectionRequest = new ConnectionRequest({
@@ -20,6 +20,24 @@ export const createConnectionRequest = async (req, res) => {
     console.log('newConnectionRequest:');
     console.dir(newConnectionRequest);
     return res.status(201).json(newConnectionRequest);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getInbox = async (req, res) => {
+  console.log('getInbox controller invoked');
+  try {
+    await authenticateRequest(req);
+    const { userId } = req;
+    const userIncomingRequests = await ConnectionRequest.find(
+      {
+        recipient: userId,
+      }
+    ).populate({path: "sender"});
+    console.log('userIncomingRequests:');
+    console.dir(userIncomingRequests);
+    return res.status(200).json(userIncomingRequests);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
