@@ -157,6 +157,25 @@ export const getPlans = async (req, res) => {
   }
 };
 
+export const getPlansByCreator = async (req, res) => {
+  try {
+    const { creatorId } = req.params;
+    const plans = await Plan.find({
+      "exercises.0": { $exists: true },
+      "description": {
+        "$regex": "^((?!A workout consisting of a single movement: ).)*$",
+        "$options": "i",
+      },
+      creator: creatorId,
+    })
+      .populate("creator")
+      .populate({ path: "exercises", populate: { path: "exercise" } });
+    res.status(200).json(plans);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+}
+
 export const getPlan = async (req, res) => {
   const { id: _id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(_id)) {

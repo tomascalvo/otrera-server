@@ -72,6 +72,18 @@ export const getDefaultMovements = async (req, res) => {
   }
 };
 
+export const getFavoriteMovements = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const favoriteMovements = await Movement.find({
+      likes: {$in: userId},
+    });
+    return res.status(200).json(favoriteMovements);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 export const searchMovements = async (req, res) => {
   console.log("searchMovements controller called");
 

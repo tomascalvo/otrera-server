@@ -4,6 +4,7 @@ import {
     createPlan,
     duplicatePlan,
     getPlans,
+    getPlansByCreator,
     getPlan,
     suggestPlans,
     updatePlan,
@@ -17,6 +18,7 @@ const router = express.Router();
 router.post('/', auth, createPlan);
 router.post('/:id/duplicate', auth, duplicatePlan);
 router.get('/', getPlans);
+router.get('/creator/:creatorId', getPlansByCreator);
 router.get('/:id', getPlan);
 router.get(`/suggest/:targetId`, auth, suggestPlans);
 router.patch('/:id', auth, updatePlan);

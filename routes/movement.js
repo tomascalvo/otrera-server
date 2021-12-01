@@ -5,6 +5,7 @@ import {
     getMovements,
     getMovementById,
     getDefaultMovements,
+    getFavoriteMovements,
     searchMovements,
     addFavorite,
     removeFavorite,
@@ -18,6 +19,7 @@ router.post("/", auth, createMovement);
 router.get("/", getMovements);
 router.get('/:id', getMovementById);
 router.get("/default", getDefaultMovements);
+router.get('/favorites/:userId', getFavoriteMovements);
 router.get("/:query/:targets/:equipment", auth, searchMovements);
 router.patch('/addFavorite/:movementId', auth, addFavorite);
 router.patch('/removeFavorite/:movementId', auth, removeFavorite);
