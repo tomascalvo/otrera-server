@@ -108,6 +108,11 @@ export const createFullRecovery = async (req, res) => {
   try {
     // get all muscle names
     const allMuscleNames = [
+      "skull",
+      "hand-left",
+      "hand-right",
+      "foot-left",
+      "foot-right",
       "abductors",
       "adductors-left",
       "adductors",
