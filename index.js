@@ -70,12 +70,12 @@ mongoose
   .connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() =>
     server.listen(PORT, () =>
-      console.log(`Otrera server running on port: ${PORT}`)
+      console.log(`Strength Training server running on port: ${PORT}`)
     )
   )
   .then(() => EDB.get(`/exercises`))
   .then(({ data: EDBmovementsUnsecure }) => {
-    console.log(`EDBmovements.length: `, EDBmovementsUnsecure.length);
+    // console.log(`EDBmovements.length: `, EDBmovementsUnsecure.length);
     EDBmovements = EDBmovementsUnsecure.map((EDBmovement) => {
       const { gifUrl: gifUrlUnsecure } = EDBmovement;
       const indexOfp = gifUrlUnsecure.indexOf("p");
@@ -118,7 +118,9 @@ mongoose
     );
   })
   .then(() => Movement.find())
-  .then((foundMovements) => console.log(`movement documents: `, foundMovements.length))
+  .then((foundMovements) => {
+    // console.log(`movement documents: `, foundMovements.length);
+  })
   .catch((error) => console.log(error.message));
 
 mongoose.set("useFindAndModify", false);

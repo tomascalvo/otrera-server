@@ -3,10 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 import User from "../models/user.model.js";
-
-import { authenticateRequest, validateMovementId } from "./helperMethods.js";
 import ConnectionRequest from "../models/connectionRequest.model.js";
 import Dyad from "../models/dyad.model.js";
+
+import { authenticateRequest, validateMovementId } from "./helperMethods.js";
+import projectTitle from '../projectTitle.js';
 
 export const createUser = async (req, res) => {
   const userData = req.body;
@@ -64,7 +65,7 @@ export const signin = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
       return res.status(404).json({
-        message: "That email is not registered to an Otrera user account.",
+        message: `That email is not registered to an ${projectTitle.short} user account.`,
       });
     }
     console.log("user account found");
@@ -112,7 +113,7 @@ export const googleSignin = async (req, res) => {
       console.log(`User account found with googleId: ${googleId}`);
       if (!userByGoogleId?.image && image) {
         console.log(
-          `This otrera user account has no profile image. Saving google imageUrl to otrera user account.`
+          `This ${projecttitle.short} user account has no profile image. Saving google imageUrl to ${projecttitle.short} user account.`
         );
         // add google image to existingUser
         const updatedUser = await User.findByIdAndUpdate(
@@ -136,17 +137,17 @@ export const googleSignin = async (req, res) => {
       }
     } else {
       console.log(
-        `Otrera doesn't have a user account in the db with googleId ${googleId}. Querying db for an otrera user account with google account email address ${email}`
+        `${projectTitle.short} doesn't have a user account in the db with googleId ${googleId}. Querying db for an ${projecttitle.short} user account with google account email address ${email}`
       );
       const userByEmail = await User.findOne({ email: email });
       if (userByEmail) {
         console.log(
-          `Found an otrera user account with an email address matching the google Oauth token: ${userByEmail?.email}`
+          `Found an ${projecttitle.short} user account with an email address matching the google Oauth token: ${userByEmail?.email}`
         );
         let updatedUser;
         if (!userByGoogleId?.image && image) {
           console.log(
-            `Updating otrera user account with the googleId and google image of google Oauth token.`
+            `Updating ${projecttitle.short} user account with the googleId and google image of google Oauth token.`
           );
           // add googleId and google image to existingUser
           updatedUser = await User.findByIdAndUpdate(
@@ -164,7 +165,7 @@ export const googleSignin = async (req, res) => {
             .json({ user: updatedUser, token: googleToken });
         } else {
           console.log(
-            `Updating otrera user account with the googleId of google Oauth token.`
+            `Updating ${projecttitle.short} user account with the googleId of google Oauth token.`
           );
           // add googleId and google image to existingUser
           updatedUser = await User.findByIdAndUpdate(
@@ -182,7 +183,7 @@ export const googleSignin = async (req, res) => {
         }
       } else {
         console.log(
-          `Otrera doesn't have a user account with email address ${email}. Creating a new otrera user account.`
+          `${projectTitle.short} doesn't have a user account with email address ${email}. Creating a new ${projecttitle.short} user account.`
         );
         const newUser = new User({
           email,
