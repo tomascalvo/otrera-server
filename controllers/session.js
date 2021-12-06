@@ -199,6 +199,9 @@ export const getRecentSessions = async (req, res) => {
         {
           plan: planId,
         },
+        {
+          startTime: { $gte: moment().subtract(24, "hours")}
+        }
       ],
     })
       .populate("plan")
