@@ -218,8 +218,12 @@ export const getRecentSessions = async (req, res) => {
 
 export const getPreviousSessions = async (req, res) => {
   console.log(`getPreviousSessions controller invoked`);
-  const { userId } = req.params;
+  const { _id: userId } = await authenticateRequest(req);
+  console.log('userId: ', userId);
   try {
+    // query for all sessions in which the user is included as an invitee, attendee, leader, or creator
+    // start time must be at least an hour in the past
+    // include sessions that have started within the past hour as long as they remain incomplete
     const previousSessions = await Session.find({
       $and: [
         {
@@ -253,9 +257,26 @@ export const getPreviousSessions = async (req, res) => {
       .populate("leader")
       .populate("attendees")
       .populate("invitees")
-      .sort("startTime");
+      .sort("startTime")
+      .lean();
+
+      // get the current user's performance of each past sessions
+
+      const previousSessionsWithPerformance = []
+      
+      await Promise.all(
+        previousSessions.map(async (session, i) => {
+          const performance = await Performance.findOne({
+            user: userId,
+            session: session._id, 
+          });
+          console.log(`performance: ${performance?._id}`)
+          previousSessionsWithPerformance.push({...previousSessions[i], performance });
+        })
+      )
+
     console.log(`sending ${previousSessions.length} previous sessions`);
-    res.status(200).json(previousSessions);
+    res.status(200).json(previousSessionsWithPerformance);
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
