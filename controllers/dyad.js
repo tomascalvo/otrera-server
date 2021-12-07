@@ -17,8 +17,8 @@ export const createDyad = async (req, res) => {
       console.log(
         `A dyad already exists for userId ${userId} and otherId ${otherId}.`
       );
-      console.log('dyadExists:');
-      console.dir(dyadExists);
+      // console.log('dyadExists:');
+      // console.dir(dyadExists);
       return res
         .status(409)
         .json({
@@ -28,8 +28,8 @@ export const createDyad = async (req, res) => {
     const newDyad = new Dyad({
       monads: [{ user: userId }, { user: otherId }],
     });
-    console.log("newDyad:");
-    console.dir(newDyad);
+    // console.log("newDyad:");
+    // console.dir(newDyad);
     await newDyad.save();
     res.status(201).send(newDyad);
   } catch (error) {

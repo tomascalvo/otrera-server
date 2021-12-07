@@ -16,15 +16,15 @@ export const createConnectionRequest = async (req, res) => {
     const { userId } = req;
     const { recipientId } = req.params;
     await validateUserId(recipientId);
-    console.log("validation step complete");
+    // console.log("validation step complete");
     const newConnectionRequest = new ConnectionRequest({
       sender: req.userId,
       recipient: req.params.recipientId,
     });
     await newConnectionRequest.save();
-    console.log("connectionRequest saved");
-    console.log("newConnectionRequest:");
-    console.dir(newConnectionRequest);
+    // console.log("connectionRequest saved");
+    // console.log("newConnectionRequest:");
+    // console.dir(newConnectionRequest);
     return res.status(201).json(newConnectionRequest);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -66,8 +66,8 @@ export const approveRequest = async (req, res) => {
       { status: "approved" },
       { new: true }
     );
-    console.log("approvedRequest:");
-    console.dir(approvedRequest);
+    // console.log("approvedRequest:");
+    // console.dir(approvedRequest);
     // create new dyad between current user and request.sender
     const { sender: senderId } = approvedRequest;
     console.log(`userId: ${userId}, senderId: ${senderId}`);

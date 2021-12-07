@@ -3,7 +3,7 @@ import BodyStatus from "../models/bodyStatus.model.js";
 import { validateObjectId } from "./helperMethods.js";
 
 export async function getBodyStatusRecordsByUserIdForAllRegions(id) {
-  console.log("getBodyStatusRecordsByUserIdForAllRegions helper method called");
+  // console.log("getBodyStatusRecordsByUserIdForAllRegions helper method called");
   // console.log(`getting bodyStatuses for userId ${id}`);
   const documents = [];
   try {
@@ -176,8 +176,8 @@ export const createFullRecovery = async (req, res) => {
     const fullRecovery = allMuscleNames.reduce((result, currentMuscleName) => {
       return Object.assign(result, { [currentMuscleName]: "recovered" });
     }, {});
-    console.log("fullRecovery:");
-    console.dir(fullRecovery);
+    // console.log("fullRecovery:");
+    // console.dir(fullRecovery);
 
     // save a bodyStatus document for each muscle name with status="recovered"
     await saveBodyStatusDocs(fullRecovery, userId);

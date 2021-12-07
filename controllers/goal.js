@@ -10,7 +10,7 @@ import { authenticateRequest, validateUserId } from "./helperMethods.js";
 export const createGoal = async (req, res) => {
   console.log("createGoal controller called");
   console.log("req.body:");
-  console.dir(req.body);
+  // console.dir(req.body);
   if (!req.body?.movement && !req.body?.EDBmovement) {
     res
       .status(409)
@@ -21,8 +21,8 @@ export const createGoal = async (req, res) => {
     ...req.body,
     user: req.userId,
   };
-  console.log("goalData:");
-  console.dir(goalData);
+  // console.log("goalData:");
+  // console.dir(goalData);
   const newGoal = new Goal(goalData);
   try {
     await newGoal.save();
@@ -134,7 +134,7 @@ export const getProgress = async (req, res) => {
               ...performance,
               attempts: performance.attempts.filter((attempt) => {
                 const isMatch = attempt?.movement.equals(goal?.movement?._id) &&
-                goal?.movement?._id !== undefined;
+                  goal?.movement?._id !== undefined;
                 console.log(`goal.movement: ${goal.movement}, attempt?.movement: ${attempt?.movement}, isMatch: ${isMatch}`);
                 return isMatch;
               }),
@@ -146,17 +146,17 @@ export const getProgress = async (req, res) => {
           `${goal.title} performancesWithFilteredAttempts.length: ${performancesWithFilteredAttempts.length}`
         );
 
-        console.log(`performancesWithFilteredAttempts:`);
-          console.dir(performancesWithFilteredAttempts);
+        // console.log(`performancesWithFilteredAttempts:`);
+        // console.dir(performancesWithFilteredAttempts);
 
-        console.log(`${goal.title} attempts:`);
-        console.dir(
-          performancesWithFilteredAttempts
-            .map((el) => {
-              return el.attempts;
-            })
-            .flat()
-        );
+        // console.log(`${goal.title} attempts:`);
+        // console.dir(
+        //   performancesWithFilteredAttempts
+        //     .map((el) => {
+        //       return el.attempts;
+        //     })
+        //     .flat()
+        // );
 
         // populate EDBmovement data into attempts
 
@@ -218,10 +218,10 @@ export const deleteGoal = async (req, res) => {
     // console.dir(goal);
     console.log(`goal.user: ${goal.user}`);
     console.log(`typeof goal.user: ${typeof goal.user}`);
-    console.dir(goal.user);
+    // console.dir(goal.user);
     console.log(`req.userId: ${req.userId}`);
     console.log(`typeof req.userId: ${typeof req.userId}`);
-    console.dir(req.userId);
+    // console.dir(req.userId);
     console.log(`goal.user === req.userId: ${goal.user === req.userId}`);
     const requestor = req.userId.toString();
     const goalOwner = goal.user.toString();

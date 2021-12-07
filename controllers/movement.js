@@ -33,11 +33,11 @@ export const getMovementById = async (req, res) => {
   try {
     const collectionExists = await Movement.findOne();
     console.log("Movement collectionExists:");
-    console.dir(collectionExists);
+    // console.dir(collectionExists);
     if (collectionExists) {
       const movement = await Movement.findById(req.params.id);
       console.log(`movement:`);
-      console.dir(movement);
+      // console.dir(movement);
       if (movement) {
         return res.status(200).json(movement);
       }
@@ -46,7 +46,7 @@ export const getMovementById = async (req, res) => {
       return EDBmovement.id === req.params.id;
     });
     console.log("EDBmovement:");
-    console.dir(EDBmovement);
+    // console.dir(EDBmovement);
     if (EDBmovement) {
       return res.status(200).json(EDBmovement);
     } else {
@@ -201,8 +201,8 @@ export const addFavorite = async (req, res) => {
         new: true,
       }
     );
-    console.log(`updatedMovement:`);
-    console.dir(updatedMovement);
+    // console.log(`updatedMovement:`);
+    // console.dir(updatedMovement);
     // return updated user document in response
     res.status(200).json(updatedMovement);
   } catch (error) {
@@ -241,8 +241,8 @@ export const removeFavorite = async (req, res) => {
         new: true,
       }
     );
-    console.log(`updatedMovement:`);
-    console.dir(updatedMovement);
+    // console.log(`updatedMovement:`);
+    // console.dir(updatedMovement);
     // return updated user document in response
     res.status(200).json(updatedMovement);
   } catch (error) {

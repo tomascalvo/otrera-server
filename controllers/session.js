@@ -55,13 +55,13 @@ export const createSingleMovementSession = async (req, res) => {
       ],
       equipment: movement?.equipment,
     };
-    console.log("planData:");
-    console.dir(planData);
+    // console.log("planData:");
+    // console.dir(planData);
     const singleMovementPlan = new Plan(planData);
-    console.log("singleMovementPlan:");
-    console.dir(singleMovementPlan);
+    // console.log("singleMovementPlan:");
+    // console.dir(singleMovementPlan);
     await singleMovementPlan.save();
-    console.log("plan saved");
+    // console.log("plan saved");
     const sessionData = {
       plan: singleMovementPlan._id,
       creator: req.userId,
@@ -70,7 +70,7 @@ export const createSingleMovementSession = async (req, res) => {
     };
     const singleMovementSession = new Session(sessionData);
     await singleMovementSession.save();
-    console.log("session saved");
+    // console.log("session saved");
     res.status(201).json(singleMovementSession);
   } catch (error) {
     res.status(409).json({ message: error.message });
@@ -278,7 +278,7 @@ export const getPreviousSessions = async (req, res) => {
         })
       )
 
-    console.log(`sending ${previousSessions.length} previous sessions`);
+    // console.log(`sending ${previousSessions.length} previous sessions`);
     res.status(200).json(previousSessionsWithPerformance);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -410,8 +410,8 @@ export const declineInvitation = async (req, res) => {
       { $pull: { 'invitees': userId } },
       { new: true }
       );
-      console.log("updatedSession:");
-      console.dir(updatedSession);
+      // console.log("updatedSession:");
+      // console.dir(updatedSession);
     return res.status(200).json(updatedSession);
   } catch (error) {
     res.status(500).json({ message: error.message });
